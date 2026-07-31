@@ -1,0 +1,8 @@
+Responsabilidades: Matemáticas puras, matrices y lógica.
+
+    -Algoritmos DFS que da la matriz del laberinto.
+    -Coordenadas X, Y y cálculo de siguiente posición.
+    -Lógica de generación y daño de trampas.
+    -Funciones para saber si choca contra pared o límite.
+    -Controlar el nivel del piso.
+    -Calcula el tiempo interno de la partida.
