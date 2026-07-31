@@ -12,12 +12,14 @@ from config import FILAS, COLUMNAS, FPS, TAMANO_CELDA
 from DEV_2.gestor_graficos import inicializar_pantalla, dibujar_laberinto, dibujar_jugador_completo, actualizar_pantalla
 from DEV_2.gestor_eventos import procesar_inputs
 from DEV_2.camara import Camara
+from DEV_2.gestor_menu import mostrar_menu
 
 # Importes de tu pana (DEV_1)
 from DEV_1.jugador_logica import JugadorLogica
 from DEV_1.generador_dfs import generar_laberinto
 from DEV_1.trampas import inyectar_obstaculos, inyectar_recargas
 from DEV_1.incendio_logica import iniciar_fuego_seguro, actualizar_fuego_por_turnos
+
 
 # Bypass para hacer los pasillos anchos sin tocar DEV_1
 def hacer_pasillos_anchos(matriz_original):
@@ -33,7 +35,11 @@ def hacer_pasillos_anchos(matriz_original):
 def main():
     pantalla = inicializar_pantalla()
     reloj = pygame.time.Clock()
-    camara = Camara() # Encendemos la cámara
+    quiere_jugar = mostrar_menu(pantalla)
+    if not quiere_jugar:
+        pygame.quit()
+        sys.exit()
+    camara = Camara()
 
     # --- GENERAR MAPA ANCHO ---
     matriz_actual = generar_laberinto(FILAS, COLUMNAS)
