@@ -1,10 +1,11 @@
-# DEV_1/test_bombero.py
+# DEV_1/test_logica.py
 import sys, os, time
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from DEV_1.generador_dfs import generar_laberinto
 from DEV_1.trampas import inyectar_obstaculos
-from DEV_1.incendio_logica import iniciar_fuego, actualizar_fuego_por_turnos
+# 1. ¡Aquí están las dos importaciones correctas!
+from DEV_1.incendio_logica import iniciar_fuego_seguro, actualizar_fuego_por_turnos
 from DEV_1.jugador_logica import JugadorLogica
 
 FILAS, COLUMNAS = 15, 15
@@ -28,7 +29,8 @@ def dibujar(matriz, jugador):
 # Inicializar todo
 matriz = generar_laberinto(FILAS, COLUMNAS)
 matriz = inyectar_obstaculos(matriz, 5)
-matriz = iniciar_fuego(matriz, 2) # Empezamos con 2 focos de incendio
+# 2. ¡Aquí se usa el nombre nuevo para inicializar!
+matriz = iniciar_fuego_seguro(matriz, 2) 
 jugador = JugadorLogica(1, 1)
 
 while jugador.esta_vivo and not jugador.ha_ganado:
@@ -41,7 +43,7 @@ while jugador.esta_vivo and not jugador.ha_ganado:
     if accion == 'A': jugador.intentar_moverse(0, -1, matriz)
     if accion == 'D': jugador.intentar_moverse(0, 1, matriz)
     
-    # Reemplaza la línea vieja por esta nueva:
+    # 3. ¡Aquí va la actualización por turnos, para que el fuego avance!
     matriz = actualizar_fuego_por_turnos(matriz, frecuencia=3)
 
 if jugador.ha_ganado:
