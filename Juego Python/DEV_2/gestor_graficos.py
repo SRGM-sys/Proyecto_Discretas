@@ -1,7 +1,7 @@
 
 import pygame
 
-from config2 import ANCHO_PANTALLA, ALTO_PANTALLA, TAMANO_CELDA, NEGRO
+from config2 import ANCHO_PANTALLA, ALTO_PANTALLA, TAMANO_CELDA, NEGRO, GRIS_PARED
 
 
 def inicializar_pantalla():
