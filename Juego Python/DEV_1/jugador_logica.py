@@ -5,14 +5,11 @@ class JugadorLogica:
     def __init__(self, fila_inicial, col_inicial):
         self.fila = fila_inicial
         self.columna = col_inicial
+        self.vida = 100          # Nueva mecánica: Vida del jugador
         self.esta_vivo = True
         self.ha_ganado = False
 
     def intentar_moverse(self, d_fila, d_col, matriz):
-        """
-        DEV 2 llamará esto cuando detecte una tecla.
-        Ejemplo moverse arriba: intentar_moverse(-1, 0, matriz)
-        """
         nueva_f = self.fila + d_fila
         nueva_c = self.columna + d_col
         
@@ -20,14 +17,20 @@ class JugadorLogica:
             self.fila = nueva_f
             self.columna = nueva_c
             self._verificar_eventos_casilla(matriz)
-            return True # Se movió
-        return False # Chocó con pared
+            return True
+        return False
 
     def _verificar_eventos_casilla(self, matriz):
-        """Revisa qué pisó el jugador"""
         valor_casilla = matriz[self.fila][self.columna]
         
-        if valor_casilla == 3: # Pisó la meta
+        if valor_casilla == 3: 
             self.ha_ganado = True
-        elif valor_casilla == 4: # Pisó trampa
+        elif valor_casilla == 4: # Pisó un obstáculo (escombro caliente)
+            self.vida -= 15
+        elif valor_casilla == 5: # Pisó fuego directamente
+            self.vida -= 30
+            
+        # Verificar si murió quemado o por daño
+        if self.vida <= 0:
+            self.vida = 0
             self.esta_vivo = False
