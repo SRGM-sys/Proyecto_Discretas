@@ -66,6 +66,7 @@ def main():
         estado_animacion = 1 
         cooldown_mov = 0 
         mirando_izquierda = False
+        tiempo_en_fuego = 0
 
         corriendo = True
         while corriendo:
@@ -105,6 +106,30 @@ def main():
                     jugando_partida = False # Si dio ESC, rompe el ciclo general y cierra
                 break
 
+            
+            # --- ANIMACIÓN GENERAL ---
+            temporizador_animacion += dt
+            if temporizador_animacion >= velocidad_animacion:
+                indice_frame = (indice_frame + 1) % 4
+                temporizador_animacion = 0
+
+            # --- VERIFICAR TIEMPO EN EL FUEGO ---
+            estado_render = estado_animacion
+            frame_render = indice_frame
+            
+            # Revisamos si la chica está parada sobre una casilla de fuego (5)
+            if matriz_actual[jugador.fila][jugador.columna] == 5:
+                tiempo_en_fuego += dt # Sumamos el tiempo (dt está en milisegundos)
+                
+                if tiempo_en_fuego >= 2000: # Si pasan 2 segundos (2000 ms)
+                    estado_render = 2 # Cambiamos a la Fila 3 de chica_pro.jpg (quemándose)
+                    
+                    # Con módulo 2 forzamos a que solo alterne entre los frames 0 y 1
+                    frame_render = indice_frame % 2 
+            else:
+                tiempo_en_fuego = 0 # Si sale del fuego, se reinicia el contador al instante
+            
+            
             # Desastres manuales y renderizado normal...
             teclas = pygame.key.get_pressed()
             if teclas[pygame.K_1]: estado_animacion = 1 
@@ -120,8 +145,8 @@ def main():
             jugador_py = jugador.fila * TAMANO_CELDA
             camara.actualizar(jugador_px, jugador_py)
 
-            dibujar_laberinto(pantalla, matriz_actual, camara)
-            dibujar_jugador_completo(pantalla, jugador.columna, jugador.fila, indice_frame, estado_animacion, camara, mirando_izquierda)
+            dibujar_laberinto(pantalla, matriz_actual, camara, indice_frame)
+            dibujar_jugador_completo(pantalla, jugador.columna, jugador.fila, frame_render, estado_render, camara, mirando_izquierda)
             dibujar_hud(pantalla, jugador, cronometro)
             
             actualizar_pantalla()

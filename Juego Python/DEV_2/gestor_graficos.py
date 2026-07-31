@@ -6,7 +6,7 @@ HOJA_JUGADOR_PRO = []
 IMAGEN_MURO = None
 
 def inicializar_pantalla():
-    global HOJA_JUGADOR_PRO, IMAGEN_MURO
+    global HOJA_JUGADOR_PRO, IMAGEN_MURO, HOJA_FUEGO
     pygame.init()
     pantalla = pygame.display.set_mode((ANCHO_PANTALLA, ALTO_PANTALLA)) 
     pygame.display.set_caption("Laberinto Sobrenatural Pro")
@@ -35,6 +35,19 @@ def inicializar_pantalla():
     except Exception as e:
         print(f"No se encontró la imagen de muro en {ruta_muro}. Se usará color gris. Error: {e}")
         IMAGEN_MURO = None
+    
+    
+    ruta_fuego = os.path.join(ruta_raiz, 'assets', 'sprites', 'fuego.jpg')
+    try:
+        # Usamos 1 fila y 4 columnas
+        HOJA_FUEGO = cargar_sprite_sheet(ruta_fuego, filas=1, columnas=4)
+        print("¡Sprites de fuego cargados con éxito!")
+    except Exception as e:
+        print(f"No se encontró el fuego. Usando cuadro rojo. Error: {e}")
+        # Fallback si no encuentra la imagen
+        cuadro_rojo = pygame.Surface((TAMANO_CELDA, TAMANO_CELDA))
+        cuadro_rojo.fill(ROJO_FUEGO)
+        HOJA_FUEGO = [cuadro_rojo] * 4
 
     return pantalla
 
@@ -78,11 +91,8 @@ def dibujar_jugador_completo(pantalla, logica_x, logica_y, frame_actual, tipo_an
         
     pantalla.blit(sprite_a_dibujar, (x_pantalla, y_pantalla))
 
-def dibujar_laberinto(pantalla, matriz, camara):
-    # 1. Todo el fondo de la pantalla pasa a ser NEGRO (lo que está afuera del laberinto)
+def dibujar_laberinto(pantalla, matriz, camara, frame_fuego=0): # <--- Nuevo parámetro
     pantalla.fill(NEGRO) 
-    
-    # Definimos un color azul oscuro para el suelo interior (puedes ajustar los números RGB si quieres otro tono)
     AZUL_OSCURO = (20, 20, 50)
     
     for fila in range(len(matriz)):
@@ -91,27 +101,23 @@ def dibujar_laberinto(pantalla, matriz, camara):
             
             x_pantalla = (col * TAMANO_CELDA) + camara.desplazamiento_x
             y_pantalla = (fila * TAMANO_CELDA) + camara.desplazamiento_y
-            
             rect = pygame.Rect(x_pantalla, y_pantalla, TAMANO_CELDA, TAMANO_CELDA)
             
-            # 2. Si la celda es camino (0, 2, etc.) o cualquier espacio válido de adentro, lo pintamos de AZUL OSCURO
-            # O si prefieres pintar explícitamente los pasillos:
-            if valor != 1: # Si NO es pared (es decir, es camino, meta, trampa, fuego, etc.)
+            if valor != 1: 
                 pygame.draw.rect(pantalla, AZUL_OSCURO, rect)
             
-            # 3. Dibujamos las paredes o elementos específicos encima
-            if valor == 1: # Pared
+            if valor == 1: 
                 if IMAGEN_MURO:
                     pantalla.blit(IMAGEN_MURO, (x_pantalla, y_pantalla))
                 else:
                     pygame.draw.rect(pantalla, GRIS_PARED, rect)
-            elif valor == 3: # Meta
+            elif valor == 3: 
                 pygame.draw.rect(pantalla, (255, 215, 0), rect) 
-            elif valor == 4: # Escombros
+            elif valor == 4: 
                 pygame.draw.rect(pantalla, (139, 0, 0), rect)
-            elif valor == 5: # Fuego
-                pygame.draw.rect(pantalla, ROJO_FUEGO, rect)
-            elif valor == 6: # Extintor
+            elif valor == 5: # --- AQUÍ DIBUJAMOS EL FUEGO ANIMADO ---
+                pantalla.blit(HOJA_FUEGO[frame_fuego], (x_pantalla, y_pantalla))
+            elif valor == 6: 
                 pygame.draw.rect(pantalla, (0, 255, 255), rect)
 
 def actualizar_pantalla():
