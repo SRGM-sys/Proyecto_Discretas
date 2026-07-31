@@ -1,18 +1,19 @@
+# DEV_1/trampas.py
 import random
 
-def inyectar_trampas(matriz, cantidad):
+def inyectar_obstaculos(matriz, cantidad):
+    """Genera escombros (valor 4) en el mapa que hacen daño al pisarlos"""
     filas = len(matriz)
     columnas = len(matriz[0])
-    trampas_colocadas = 0
+    obstaculos_colocados = 0
     
-    while trampas_colocadas < cantidad:
+    while obstaculos_colocados < cantidad:
         f = random.randint(1, filas - 2)
         c = random.randint(1, columnas - 2)
         
-        # Solo poner trampa si es un camino normal (0)
-        # Para no sobreescribir paredes, el inicio o la meta
+        # Solo poner obstáculos en caminos libres (0)
         if matriz[f][c] == 0:
             matriz[f][c] = 4
-            trampas_colocadas += 1
+            obstaculos_colocados += 1
             
     return matriz
