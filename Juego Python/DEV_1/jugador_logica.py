@@ -6,7 +6,9 @@ class JugadorLogica:
         self.fila = fila_inicial
         self.columna = col_inicial
         self.vida = 100
-        self.extintores = 0      # Nueva mecánica: Inventario de extintores
+        # Mecánica de Extintor: Empieza con 1 uso, puede almacenar hasta 3
+        self.carga_extintor = 1 
+        self.carga_maxima = 3   
         self.esta_vivo = True
         self.ha_ganado = False
 
@@ -27,19 +29,19 @@ class JugadorLogica:
         if valor_casilla == 3: 
             self.ha_ganado = True
             
-        elif valor_casilla == 6: # Recoge Extintor
-            self.extintores += 1
-            matriz[self.fila][self.columna] = 0 # Consume el item del mapa
+        elif valor_casilla == 6: # Pisó un punto de recarga
+            self.carga_extintor = self.carga_maxima # Llena el tanque al máximo
+            matriz[self.fila][self.columna] = 0     # Consume la recarga del mapa
             
         elif valor_casilla == 4: # Obstáculo
             self.vida -= 15
             
         elif valor_casilla == 5: # Fuego
-            if self.extintores > 0:
-                self.extintores -= 1
-                matriz[self.fila][self.columna] = 0 # ¡El extintor apaga el fuego!
+            if self.carga_extintor > 0:
+                self.carga_extintor -= 1            # Gasta una carga
+                matriz[self.fila][self.columna] = 0 # Apaga el fuego (lo vuelve camino)
             else:
-                self.vida -= 30
+                self.vida -= 30                     # Sin cargas, recibe daño directo
             
         if self.vida <= 0:
             self.vida = 0

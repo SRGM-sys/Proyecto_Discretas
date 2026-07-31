@@ -11,9 +11,24 @@ def inyectar_obstaculos(matriz, cantidad):
         f = random.randint(1, filas - 2)
         c = random.randint(1, columnas - 2)
         
-        # Solo poner obstáculos en caminos libres (0)
         if matriz[f][c] == 0:
             matriz[f][c] = 4
             obstaculos_colocados += 1
+            
+    return matriz
+
+def inyectar_recargas(matriz, cantidad):
+    """Genera estaciones de recarga de extintor (valor 6)"""
+    filas = len(matriz)
+    columnas = len(matriz[0])
+    recargas_colocadas = 0
+    
+    while recargas_colocadas < cantidad:
+        f = random.randint(1, filas - 2)
+        c = random.randint(1, columnas - 2)
+        
+        if matriz[f][c] == 0:
+            matriz[f][c] = 6
+            recargas_colocadas += 1
             
     return matriz
