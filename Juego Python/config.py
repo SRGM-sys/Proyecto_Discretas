@@ -1,9 +1,15 @@
 # config.py
 ANCHO_PANTALLA = 800
 ALTO_PANTALLA = 600
-NEGRO = (0, 0, 0)
-BLANCO = (255, 255, 255)
 
 # config.py
 FILAS = 21
 COLUMNAS = 31
+
+# Colores rápidos (RGB)
+BLANCO = (255, 255, 255)
+NEGRO = (0, 0, 0)
+GRIS_PARED = (100, 100, 100)
+VERDE_JUGADOR = (0, 255, 0)
+ROJO_FUEGO = (220, 50, 50)
+AZUL_AGUA = (50, 50, 220)
