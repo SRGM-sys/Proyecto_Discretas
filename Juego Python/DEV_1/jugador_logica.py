@@ -5,7 +5,8 @@ class JugadorLogica:
     def __init__(self, fila_inicial, col_inicial):
         self.fila = fila_inicial
         self.columna = col_inicial
-        self.vida = 100          # Nueva mecánica: Vida del jugador
+        self.vida = 100
+        self.extintores = 0      # Nueva mecánica: Inventario de extintores
         self.esta_vivo = True
         self.ha_ganado = False
 
@@ -25,12 +26,21 @@ class JugadorLogica:
         
         if valor_casilla == 3: 
             self.ha_ganado = True
-        elif valor_casilla == 4: # Pisó un obstáculo (escombro caliente)
-            self.vida -= 15
-        elif valor_casilla == 5: # Pisó fuego directamente
-            self.vida -= 30
             
-        # Verificar si murió quemado o por daño
+        elif valor_casilla == 6: # Recoge Extintor
+            self.extintores += 1
+            matriz[self.fila][self.columna] = 0 # Consume el item del mapa
+            
+        elif valor_casilla == 4: # Obstáculo
+            self.vida -= 15
+            
+        elif valor_casilla == 5: # Fuego
+            if self.extintores > 0:
+                self.extintores -= 1
+                matriz[self.fila][self.columna] = 0 # ¡El extintor apaga el fuego!
+            else:
+                self.vida -= 30
+            
         if self.vida <= 0:
             self.vida = 0
             self.esta_vivo = False
