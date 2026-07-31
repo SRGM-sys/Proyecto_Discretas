@@ -1,0 +1,9 @@
+# config.py
+ANCHO_PANTALLA = 800
+ALTO_PANTALLA = 600
+NEGRO = (0, 0, 0)
+BLANCO = (255, 255, 255)
+
+# config.py
+FILAS = 21
+COLUMNAS = 31
