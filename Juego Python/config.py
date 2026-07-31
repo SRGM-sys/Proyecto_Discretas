@@ -3,8 +3,8 @@ ANCHO_PANTALLA = 800
 ALTO_PANTALLA = 600
 
 # config.py
-FILAS = 21
-COLUMNAS = 31
+FILAS = 11
+COLUMNAS = 15
 
 # Magia pro: calculamos el tamaño de la celda para que quepa exacto en pantalla
 TAMANO_CELDA_X = ANCHO_PANTALLA // COLUMNAS

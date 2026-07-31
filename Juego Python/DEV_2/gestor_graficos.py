@@ -40,15 +40,32 @@ def cargar_sprite_sheet(ruta_archivo, filas, columnas):
     alto_frame = alto_completo // filas
     
     frames = []
+    margen = 10 
+    tamano_reducido = TAMANO_CELDA - margen
+    
     for f in range(filas):
         for c in range(columnas):
             rect = pygame.Rect(c * ancho_frame, f * alto_frame, ancho_frame, alto_frame)
             frame_superficie = pygame.Surface((ancho_frame, alto_frame), pygame.SRCALPHA)
             frame_superficie.blit(imagen_completa, (0, 0), rect)
-            frame_escalado = pygame.transform.scale(frame_superficie, (TAMANO_CELDA, TAMANO_CELDA))
+            
+            # 2. Escalamos la imagen a nuestro nuevo tamaño reducido
+            frame_escalado = pygame.transform.scale(frame_superficie, (tamano_reducido, tamano_reducido))
             frames.append(frame_escalado)
             
     return frames
+
+def dibujar_jugador_completo(pantalla, logica_x, logica_y, frame_actual, tipo_animacion=0):
+    # 3. Sumamos la mitad del margen al X e Y para que quede centrada en el pasillo
+    margen = 10
+    x_pixel = (logica_x * TAMANO_CELDA) + (margen // 2)
+    y_pixel = (logica_y * TAMANO_CELDA) + (margen // 2)
+    
+    indice_base = (tipo_animacion % 4) * 4 
+    frame_final = indice_base + (frame_actual % 4)
+    
+    sprite_a_dibujar = HOJA_JUGADOR_PRO[frame_final]
+    pantalla.blit(sprite_a_dibujar, (x_pixel, y_pixel))
 
 def dibujar_jugador_completo(pantalla, logica_x, logica_y, frame_actual, tipo_animacion=0):
     x_pixel = logica_x * TAMANO_CELDA
