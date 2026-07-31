@@ -1,5 +1,6 @@
 import sys
 import os
+import random
 
 ruta_raiz = os.path.dirname(os.path.abspath(__file__))
 if ruta_raiz not in sys.path:
@@ -67,6 +68,12 @@ def main():
         cooldown_mov = 0 
         mirando_izquierda = False
         tiempo_en_fuego = 0
+        
+        temporizador_terremoto = 0
+        tiempo_entre_terremotos = 12000 # 12 segundos (12000 milisegundos)
+        terremoto_activo = False
+        duracion_terremoto = 1500       # El temblor durará 1.5 segundos
+        tiempo_actual_terremoto = 0
 
         corriendo = True
         while corriendo:
@@ -128,6 +135,18 @@ def main():
                     frame_render = indice_frame % 2 
             else:
                 tiempo_en_fuego = 0 # Si sale del fuego, se reinicia el contador al instante
+                
+            # --- LÓGICA DEL TERREMOTO ---
+            if not terremoto_activo:
+                temporizador_terremoto += dt
+                if temporizador_terremoto >= tiempo_entre_terremotos:
+                    terremoto_activo = True
+                    temporizador_terremoto = 0
+                    tiempo_actual_terremoto = 0
+            else:
+                tiempo_actual_terremoto += dt
+                if tiempo_actual_terremoto >= duracion_terremoto:
+                    terremoto_activo = False # Se acaba el temblor
             
             
             # Desastres manuales y renderizado normal...
@@ -141,9 +160,16 @@ def main():
                 indice_frame = (indice_frame + 1) % 4
                 temporizador_animacion = 0
 
+            # --- CÁMARA Y RENDERIZADO ---
             jugador_px = jugador.columna * TAMANO_CELDA
             jugador_py = jugador.fila * TAMANO_CELDA
             camara.actualizar(jugador_px, jugador_py)
+
+            # --- EFECTO DE SCREEN SHAKE (TEMBLOR) ---
+            if terremoto_activo:
+                intensidad = 8 # Cuántos píxeles se sacudirá la pantalla (ajusta a tu gusto)
+                camara.desplazamiento_x += random.randint(-intensidad, intensidad)
+                camara.desplazamiento_y += random.randint(-intensidad, intensidad)
 
             dibujar_laberinto(pantalla, matriz_actual, camara, indice_frame)
             dibujar_jugador_completo(pantalla, jugador.columna, jugador.fila, frame_render, estado_render, camara, mirando_izquierda)
