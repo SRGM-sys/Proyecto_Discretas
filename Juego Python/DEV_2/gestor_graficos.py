@@ -3,12 +3,14 @@ import os
 from config import ANCHO_PANTALLA, ALTO_PANTALLA, TAMANO_CELDA, VERDE_JUGADOR, NEGRO, GRIS_PARED, ROJO_FUEGO
 
 HOJA_JUGADOR_PRO = []
+IMAGEN_MURO = None
 
 def inicializar_pantalla():
-    global HOJA_JUGADOR_PRO 
+    global HOJA_JUGADOR_PRO, IMAGEN_MURO
     pygame.init()
     pantalla = pygame.display.set_mode((ANCHO_PANTALLA, ALTO_PANTALLA)) 
     pygame.display.set_caption("Laberinto Sobrenatural Pro")
+    
     
     ruta_actual = os.path.dirname(os.path.abspath(__file__))
     ruta_raiz = os.path.dirname(ruta_actual)
@@ -22,6 +24,17 @@ def inicializar_pantalla():
         cuadro_verde = pygame.Surface((TAMANO_CELDA, TAMANO_CELDA))
         cuadro_verde.fill(VERDE_JUGADOR)
         HOJA_JUGADOR_PRO = [cuadro_verde] * 16
+        
+        
+    ruta_muro = os.path.join(ruta_raiz, 'assets', 'sprites', 'muro.jpg') # Cambia el nombre si tu imagen se llama diferente
+    try:
+        img_muro_original = pygame.image.load(ruta_muro).convert_alpha()
+        # Escalamos la imagen al tamaño exacto de la celda (64x64 píxeles)
+        IMAGEN_MURO = pygame.transform.scale(img_muro_original, (TAMANO_CELDA, TAMANO_CELDA))
+        print("¡Textura de muro cargada con éxito!")
+    except Exception as e:
+        print(f"No se encontró la imagen de muro en {ruta_muro}. Se usará color gris. Error: {e}")
+        IMAGEN_MURO = None
 
     return pantalla
 
@@ -66,7 +79,11 @@ def dibujar_jugador_completo(pantalla, logica_x, logica_y, frame_actual, tipo_an
     pantalla.blit(sprite_a_dibujar, (x_pantalla, y_pantalla))
 
 def dibujar_laberinto(pantalla, matriz, camara):
+    # 1. Todo el fondo de la pantalla pasa a ser NEGRO (lo que está afuera del laberinto)
     pantalla.fill(NEGRO) 
+    
+    # Definimos un color azul oscuro para el suelo interior (puedes ajustar los números RGB si quieres otro tono)
+    AZUL_OSCURO = (20, 20, 50)
     
     for fila in range(len(matriz)):
         for col in range(len(matriz[fila])):
@@ -77,16 +94,25 @@ def dibujar_laberinto(pantalla, matriz, camara):
             
             rect = pygame.Rect(x_pantalla, y_pantalla, TAMANO_CELDA, TAMANO_CELDA)
             
-            if valor == 1: 
-                pygame.draw.rect(pantalla, GRIS_PARED, rect)
-            elif valor == 3: 
+            # 2. Si la celda es camino (0, 2, etc.) o cualquier espacio válido de adentro, lo pintamos de AZUL OSCURO
+            # O si prefieres pintar explícitamente los pasillos:
+            if valor != 1: # Si NO es pared (es decir, es camino, meta, trampa, fuego, etc.)
+                pygame.draw.rect(pantalla, AZUL_OSCURO, rect)
+            
+            # 3. Dibujamos las paredes o elementos específicos encima
+            if valor == 1: # Pared
+                if IMAGEN_MURO:
+                    pantalla.blit(IMAGEN_MURO, (x_pantalla, y_pantalla))
+                else:
+                    pygame.draw.rect(pantalla, GRIS_PARED, rect)
+            elif valor == 3: # Meta
                 pygame.draw.rect(pantalla, (255, 215, 0), rect) 
-            elif valor == 4: 
+            elif valor == 4: # Escombros
                 pygame.draw.rect(pantalla, (139, 0, 0), rect)
-            elif valor == 5: 
+            elif valor == 5: # Fuego
                 pygame.draw.rect(pantalla, ROJO_FUEGO, rect)
-            elif valor == 6: 
-                pygame.draw.rect(pantalla, (0, 255, 255), rect) 
+            elif valor == 6: # Extintor
+                pygame.draw.rect(pantalla, (0, 255, 255), rect)
 
 def actualizar_pantalla():
     pygame.display.flip()
@@ -111,3 +137,44 @@ def dibujar_hud(pantalla, jugador, cronometro):
     segundos = cronometro.obtener_segundos()
     texto_tiempo = fuente.render(f"TIEMPO: {segundos}s", True, (255, 255, 255))
     pantalla.blit(texto_tiempo, (ANCHO_PANTALLA - 130, 20))
+    
+
+def mostrar_pantalla_fin(pantalla, ha_ganado):
+    fuente_titulo = pygame.font.SysFont("Arial", 50, bold=True)
+    fuente_sub = pygame.font.SysFont("Arial", 22)
+    
+    if ha_ganado:
+        texto_principal = fuente_titulo.render("¡HAS GANADO!", True, (255, 215, 0))
+    else:
+        texto_principal = fuente_titulo.render("¡HAS MUERTO!", True, (255, 50, 50))
+        
+    texto_reintentar = fuente_sub.render("Presiona [ R ] para intentar de nuevo", True, (0, 255, 255))
+    texto_salir = fuente_sub.render("Presiona [ ESC ] para salir", True, (200, 200, 200))
+    
+    rect_principal = texto_principal.get_rect(center=(ANCHO_PANTALLA // 2, ALTO_PANTALLA // 2 - 40))
+    rect_reintentar = texto_reintentar.get_rect(center=(ANCHO_PANTALLA // 2, ALTO_PANTALLA // 2 + 20))
+    rect_salir = texto_salir.get_rect(center=(ANCHO_PANTALLA // 2, ALTO_PANTALLA // 2 + 60))
+
+    reloj = pygame.time.Clock()
+    while True:
+        pantalla.fill(NEGRO)
+        
+        for evento in pygame.event.get():
+            if evento.type == pygame.QUIT:
+                pygame.event.clear()
+                return False
+            
+            if evento.type == pygame.KEYDOWN:
+                if evento.key == pygame.K_r:
+                    pygame.event.clear() # Limpiamos eventos para que no interfieran con el nuevo juego
+                    return True
+                if evento.key == pygame.K_ESCAPE:
+                    pygame.event.clear()
+                    return False
+
+        pantalla.blit(texto_principal, rect_principal)
+        pantalla.blit(texto_reintentar, rect_reintentar)
+        pantalla.blit(texto_salir, rect_salir)
+        
+        pygame.display.flip()
+        reloj.tick(60)

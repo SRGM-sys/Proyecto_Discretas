@@ -41,7 +41,7 @@ class JugadorLogica:
                 self.carga_extintor -= 1            # Gasta una carga
                 matriz[self.fila][self.columna] = 0 # Apaga el fuego (lo vuelve camino)
             else:
-                self.vida -= 30                     # Sin cargas, recibe daño directo
+                self.vida -= 1                     # Sin cargas, recibe daño directo
             
         if self.vida <= 0:
             self.vida = 0
