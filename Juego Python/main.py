@@ -13,6 +13,7 @@ from DEV_2.gestor_graficos import inicializar_pantalla, dibujar_laberinto, dibuj
 from DEV_2.gestor_eventos import procesar_inputs
 from DEV_2.camara import Camara
 from DEV_2.gestor_menu import mostrar_menu
+from DEV_2.lector_assets import inicializar_audio
 
 # Importes de tu pana (DEV_1)
 from DEV_1.jugador_logica import JugadorLogica
@@ -36,6 +37,7 @@ def hacer_pasillos_anchos(matriz_original):
 def main():
     pantalla = inicializar_pantalla()
     reloj = pygame.time.Clock()
+    inicializar_audio()
     
     # Menú principal inicial
     quiere_jugar = mostrar_menu(pantalla)
