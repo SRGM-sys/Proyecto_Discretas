@@ -1,31 +1,24 @@
 import pygame
 import os
-# Importamos del config ORIGINAL de la raíz
-from config import ANCHO_PANTALLA,ALTO_PANTALLA,TAMANO_CELDA,VERDE_JUGADOR,NEGRO,GRIS_PARED,ROJO_FUEGO
+from config import ANCHO_PANTALLA, ALTO_PANTALLA, TAMANO_CELDA, VERDE_JUGADOR, NEGRO, GRIS_PARED, ROJO_FUEGO
 
-# Dejamos la lista vacía al inicio
 HOJA_JUGADOR_PRO = []
 
 def inicializar_pantalla():
-    """Levanta la ventana de Pygame, la devuelve Y carga la imagen."""
     global HOJA_JUGADOR_PRO 
-    
     pygame.init()
     pantalla = pygame.display.set_mode((ANCHO_PANTALLA, ALTO_PANTALLA)) 
     pygame.display.set_caption("Laberinto Sobrenatural Pro")
     
-    # MAGIA PRO: Construimos la ruta exacta y absoluta sin importar dónde ejecutes el código
-    ruta_actual = os.path.dirname(os.path.abspath(__file__)) # Esto nos da la ruta de DEV_2
-    ruta_raiz = os.path.dirname(ruta_actual) # Subimos una carpeta a la raíz del proyecto
+    ruta_actual = os.path.dirname(os.path.abspath(__file__))
+    ruta_raiz = os.path.dirname(ruta_actual)
     ruta_imagen = os.path.join(ruta_raiz, 'assets', 'sprites', 'chica_pro.png')
     
     try:
         HOJA_JUGADOR_PRO = cargar_sprite_sheet(ruta_imagen, filas=4, columnas=4)
         print("¡Imagen de la chica cargada con éxito!")
     except Exception as e:
-        print(f"Error cargando imagen. Buscando en: {ruta_imagen}")
-        print(f"El error fue: {e}")
-        # Fallback verde
+        print(f"Error cargando imagen. Buscando en: {ruta_imagen}\nEl error fue: {e}")
         cuadro_verde = pygame.Surface((TAMANO_CELDA, TAMANO_CELDA))
         cuadro_verde.fill(VERDE_JUGADOR)
         HOJA_JUGADOR_PRO = [cuadro_verde] * 16
@@ -48,57 +41,52 @@ def cargar_sprite_sheet(ruta_archivo, filas, columnas):
             rect = pygame.Rect(c * ancho_frame, f * alto_frame, ancho_frame, alto_frame)
             frame_superficie = pygame.Surface((ancho_frame, alto_frame), pygame.SRCALPHA)
             frame_superficie.blit(imagen_completa, (0, 0), rect)
-            
-            # 2. Escalamos la imagen a nuestro nuevo tamaño reducido
             frame_escalado = pygame.transform.scale(frame_superficie, (tamano_reducido, tamano_reducido))
             frames.append(frame_escalado)
             
     return frames
 
-def dibujar_jugador_completo(pantalla, logica_x, logica_y, frame_actual, tipo_animacion=0):
-    # 3. Sumamos la mitad del margen al X e Y para que quede centrada en el pasillo
+def dibujar_jugador_completo(pantalla, logica_x, logica_y, frame_actual, tipo_animacion, camara, flip_x=False):
     margen = 10
-    x_pixel = (logica_x * TAMANO_CELDA) + (margen // 2)
-    y_pixel = (logica_y * TAMANO_CELDA) + (margen // 2)
+    mundo_x = (logica_x * TAMANO_CELDA) + (margen // 2)
+    mundo_y = (logica_y * TAMANO_CELDA) + (margen // 2)
+    
+    x_pantalla = mundo_x + camara.desplazamiento_x
+    y_pantalla = mundo_y + camara.desplazamiento_y
     
     indice_base = (tipo_animacion % 4) * 4 
     frame_final = indice_base + (frame_actual % 4)
     
     sprite_a_dibujar = HOJA_JUGADOR_PRO[frame_final]
-    pantalla.blit(sprite_a_dibujar, (x_pixel, y_pixel))
-
-def dibujar_jugador_completo(pantalla, logica_x, logica_y, frame_actual, tipo_animacion=0):
-    x_pixel = logica_x * TAMANO_CELDA
-    y_pixel = logica_y * TAMANO_CELDA
     
-    indice_base = (tipo_animacion % 4) * 4 
-    frame_final = indice_base + (frame_actual % 4)
-    
-    sprite_a_dibujar = HOJA_JUGADOR_PRO[frame_final]
-    pantalla.blit(sprite_a_dibujar, (x_pixel, y_pixel))
+    # MAGIA PRO: Si flip_x es True, volteamos la imagen horizontalmente
+    if flip_x:
+        sprite_a_dibujar = pygame.transform.flip(sprite_a_dibujar, True, False)
+        
+    pantalla.blit(sprite_a_dibujar, (x_pantalla, y_pantalla))
 
-def dibujar_laberinto(pantalla, matriz):
+def dibujar_laberinto(pantalla, matriz, camara):
     pantalla.fill(NEGRO) 
     
     for fila in range(len(matriz)):
         for col in range(len(matriz[fila])):
             valor = matriz[fila][col]
             
-            x_pixel = col * TAMANO_CELDA
-            y_pixel = fila * TAMANO_CELDA
-            rect = pygame.Rect(x_pixel, y_pixel, TAMANO_CELDA, TAMANO_CELDA)
+            x_pantalla = (col * TAMANO_CELDA) + camara.desplazamiento_x
+            y_pantalla = (fila * TAMANO_CELDA) + camara.desplazamiento_y
             
-            # Tu compa Dev 1 añadió nuevas cosas (5 = fuego, 6 = extintor)
+            rect = pygame.Rect(x_pantalla, y_pantalla, TAMANO_CELDA, TAMANO_CELDA)
+            
             if valor == 1: 
                 pygame.draw.rect(pantalla, GRIS_PARED, rect)
-            elif valor == 3: # Meta
+            elif valor == 3: 
                 pygame.draw.rect(pantalla, (255, 215, 0), rect) 
-            elif valor == 4: # Escombros
+            elif valor == 4: 
                 pygame.draw.rect(pantalla, (139, 0, 0), rect)
-            elif valor == 5: # Fuego
+            elif valor == 5: 
                 pygame.draw.rect(pantalla, ROJO_FUEGO, rect)
-            elif valor == 6: # Extintor
-                pygame.draw.rect(pantalla, (0, 255, 255), rect) # Cian para el extintor
+            elif valor == 6: 
+                pygame.draw.rect(pantalla, (0, 255, 255), rect) 
 
 def actualizar_pantalla():
     pygame.display.flip()

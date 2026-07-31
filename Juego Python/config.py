@@ -3,13 +3,12 @@ ANCHO_PANTALLA = 800
 ALTO_PANTALLA = 600
 
 # config.py
-FILAS = 11
-COLUMNAS = 15
+FILAS = 21 
+COLUMNAS = 31
 
-# Magia pro: calculamos el tamaño de la celda para que quepa exacto en pantalla
-TAMANO_CELDA_X = ANCHO_PANTALLA // COLUMNAS
-TAMANO_CELDA_Y = ALTO_PANTALLA // FILAS
-TAMANO_CELDA = min(TAMANO_CELDA_X, TAMANO_CELDA_Y) # Usamos el menor para que sean cuadrados perfectos
+# FIJAMOS la celda a un tamaño grande. La cámara hará el resto.
+TAMANO_CELDA = 64 
+FPS = 60
 
 FPS = 60
 

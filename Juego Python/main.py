@@ -1,4 +1,3 @@
-# main.py
 import sys
 import os
 
@@ -7,77 +6,96 @@ if ruta_raiz not in sys.path:
     sys.path.insert(0, ruta_raiz)
 
 import pygame
-from config import FILAS, COLUMNAS, FPS 
+from config import FILAS, COLUMNAS, FPS, TAMANO_CELDA
 
-# Importes de DEV_2 (Tu trabajo gráfico)
+# Importes tuyos (DEV_2)
 from DEV_2.gestor_graficos import inicializar_pantalla, dibujar_laberinto, dibujar_jugador_completo, actualizar_pantalla
 from DEV_2.gestor_eventos import procesar_inputs
+from DEV_2.camara import Camara
 
-# Importes de DEV_1 (Llamamos a sus funciones buenas, ignoramos el manager roto)
+# Importes de tu pana (DEV_1)
 from DEV_1.jugador_logica import JugadorLogica
 from DEV_1.generador_dfs import generar_laberinto
 from DEV_1.trampas import inyectar_obstaculos, inyectar_recargas
 from DEV_1.incendio_logica import iniciar_fuego_seguro, actualizar_fuego_por_turnos
 
+# Bypass para hacer los pasillos anchos sin tocar DEV_1
+def hacer_pasillos_anchos(matriz_original):
+    matriz_ancha = []
+    for fila in matriz_original:
+        fila_doble = []
+        for celda in fila:
+            fila_doble.extend([celda, celda]) 
+        matriz_ancha.append(fila_doble)
+        matriz_ancha.append(list(fila_doble)) 
+    return matriz_ancha
+
 def main():
     pantalla = inicializar_pantalla()
     reloj = pygame.time.Clock()
+    camara = Camara() # Encendemos la cámara
 
-    # --- 1. INICIALIZAR LÓGICA (Bypass de Dev 1) ---
-    # Creamos el mapa paso a paso con las funciones que SÍ le funcionan a tu pana
+    # --- GENERAR MAPA ANCHO ---
     matriz_actual = generar_laberinto(FILAS, COLUMNAS)
+    matriz_actual = hacer_pasillos_anchos(matriz_actual) # ¡Magia de pasillos anchos!
     matriz_actual = inyectar_obstaculos(matriz_actual, 5)
     matriz_actual = inyectar_recargas(matriz_actual, 2)
     matriz_actual = iniciar_fuego_seguro(matriz_actual, 2)
     
-    jugador = JugadorLogica(1, 1) # Empieza en la celda 1,1
+    # Como duplicamos el tamaño de todo, empezamos en 2,2 para no estar pegados a la pared
+    jugador = JugadorLogica(2, 2) 
 
-    # --- 2. VARIABLES DE ANIMACIÓN (DEV 2) ---
     indice_frame = 0
     temporizador_animacion = 0
-    velocidad_animacion = 150 # ms por frame
-    estado_animacion = 1 # 1 = Top-Down normal (Fila 2)
+    velocidad_animacion = 150 
+    estado_animacion = 1 
     cooldown_mov = 0 
+    mirando_izquierda = False
 
     corriendo = True
     while corriendo:
         dt = reloj.tick(FPS)
 
-        # --- 3. CAPTURAR TECLAS ---
         mov_x, mov_y, salir = procesar_inputs()
-        if salir:
-            corriendo = False
+        if salir: corriendo = False
 
-        # --- 4. MOVER AL JUGADOR ---
+        # --- MOVER AL JUGADOR ---
         if cooldown_mov <= 0:
             if mov_x != 0 or mov_y != 0:
                 se_movio = jugador.intentar_moverse(mov_y, mov_x, matriz_actual)
-                
                 if se_movio:
                     cooldown_mov = 150 
-                    if mov_x != 0: estado_animacion = 0 # Lateral
-                    if mov_y != 0: estado_animacion = 1 # Top-Down
+                    if mov_x != 0: 
+                        estado_animacion = 0 
+                        # Si mov_x es -1 (izquierda), esto se vuelve True y la voltea
+                        mirando_izquierda = (mov_x < 0) 
                     
-                    # Hacemos que el fuego crezca al moverse (lógica de Dev 1)
+                    if mov_y != 0: 
+                        estado_animacion = 1 
+                    
                     matriz_actual = actualizar_fuego_por_turnos(matriz_actual, frecuencia=3)
         else:
             cooldown_mov -= dt
 
-        # --- 5. TUS DESASTRES SOBRENATURALES MANUALES ---
+        # --- DESASTRES MANUALES ---
         teclas = pygame.key.get_pressed()
-        if teclas[pygame.K_1]: estado_animacion = 1 # Normal
-        elif teclas[pygame.K_2]: estado_animacion = 2 # Incendio! (Fila 3)
-        elif teclas[pygame.K_3]: estado_animacion = 3 # Inundación! (Fila 4)
+        if teclas[pygame.K_1]: estado_animacion = 1 
+        elif teclas[pygame.K_2]: estado_animacion = 2 
+        elif teclas[pygame.K_3]: estado_animacion = 3 
 
-        # --- 6. AVANZAR LA ANIMACIÓN ---
+        # --- ANIMACIÓN ---
         temporizador_animacion += dt
         if temporizador_animacion >= velocidad_animacion:
             indice_frame = (indice_frame + 1) % 4
             temporizador_animacion = 0
 
-        # --- 7. DIBUJAR TODO ---
-        dibujar_laberinto(pantalla, matriz_actual)
-        dibujar_jugador_completo(pantalla, jugador.columna, jugador.fila, indice_frame, estado_animacion)
+        # --- ACTUALIZAR CÁMARA Y DIBUJAR ---
+        jugador_px = jugador.columna * TAMANO_CELDA
+        jugador_py = jugador.fila * TAMANO_CELDA
+        camara.actualizar(jugador_px, jugador_py) # La cámara persigue a la chica
+
+        dibujar_laberinto(pantalla, matriz_actual, camara)
+        dibujar_jugador_completo(pantalla, jugador.columna, jugador.fila, indice_frame, estado_animacion, camara, mirando_izquierda)
         
         actualizar_pantalla()
 
