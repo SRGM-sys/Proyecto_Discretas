@@ -9,7 +9,7 @@ import pygame
 from config import FILAS, COLUMNAS, FPS, TAMANO_CELDA
 
 # Importes tuyos (DEV_2)
-from DEV_2.gestor_graficos import inicializar_pantalla, dibujar_laberinto, dibujar_jugador_completo, actualizar_pantalla
+from DEV_2.gestor_graficos import inicializar_pantalla, dibujar_laberinto, dibujar_jugador_completo, dibujar_hud, actualizar_pantalla
 from DEV_2.gestor_eventos import procesar_inputs
 from DEV_2.camara import Camara
 from DEV_2.gestor_menu import mostrar_menu
@@ -19,6 +19,7 @@ from DEV_1.jugador_logica import JugadorLogica
 from DEV_1.generador_dfs import generar_laberinto
 from DEV_1.trampas import inyectar_obstaculos, inyectar_recargas
 from DEV_1.incendio_logica import iniciar_fuego_seguro, actualizar_fuego_por_turnos
+from DEV_1.cronometro import Cronometro
 
 
 # Bypass para hacer los pasillos anchos sin tocar DEV_1
@@ -59,6 +60,9 @@ def main():
     mirando_izquierda = False
 
     corriendo = True
+    cronometro = Cronometro()
+    cronometro.iniciar()
+
     while corriendo:
         dt = reloj.tick(FPS)
 
@@ -102,6 +106,7 @@ def main():
 
         dibujar_laberinto(pantalla, matriz_actual, camara)
         dibujar_jugador_completo(pantalla, jugador.columna, jugador.fila, indice_frame, estado_animacion, camara, mirando_izquierda)
+        dibujar_hud(pantalla, jugador, cronometro)
         
         actualizar_pantalla()
 

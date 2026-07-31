@@ -90,3 +90,24 @@ def dibujar_laberinto(pantalla, matriz, camara):
 
 def actualizar_pantalla():
     pygame.display.flip()
+    
+
+def dibujar_hud(pantalla, jugador, cronometro):
+    """
+    Dibuja la barra de vida, las cargas del extintor y el tiempo en pantalla
+    de forma fija (sin que se muevan con la cámara).
+    """
+    fuente = pygame.font.SysFont("Arial", 20, bold=True)
+    
+    # 1. Dibujar la Vida (HP)
+    texto_vida = fuente.render(f"VIDA: {jugador.vida} HP", True, (255, 50, 50))
+    pantalla.blit(texto_vida, (20, 20))
+    
+    # 2. Dibujar las cargas del extintor
+    texto_extintor = fuente.render(f"EXTINTOR: {jugador.carga_extintor}/{jugador.carga_maxima}", True, (0, 255, 255))
+    pantalla.blit(texto_extintor, (20, 50))
+    
+    # 3. Dibujar el Cronómetro (tiempo transcurrido)
+    segundos = cronometro.obtener_segundos()
+    texto_tiempo = fuente.render(f"TIEMPO: {segundos}s", True, (255, 255, 255))
+    pantalla.blit(texto_tiempo, (ANCHO_PANTALLA - 130, 20))
