@@ -10,11 +10,22 @@ import pygame
 from config import FILAS, COLUMNAS, FPS, TAMANO_CELDA
 
 # Importes tuyos (DEV_2)
-from DEV_2.gestor_graficos import inicializar_pantalla, dibujar_laberinto, dibujar_jugador_completo, dibujar_hud, mostrar_pantalla_fin, actualizar_pantalla
+from DEV_2.gestor_graficos import (
+    inicializar_pantalla,
+    dibujar_laberinto,
+    dibujar_jugador_completo,
+    dibujar_hud,
+    mostrar_pantalla_fin,
+    actualizar_pantalla,
+    establecer_rostro_jugador
+)
 from DEV_2.gestor_eventos import procesar_inputs
 from DEV_2.camara import Camara
 from DEV_2.gestor_menu import mostrar_menu
+#
+from DEV_2.selector_personajes import seleccionar_personaje
 from DEV_2.lector_assets import inicializar_audio
+
 
 # Importes de tu pana (DEV_1)
 from DEV_1.jugador_logica import JugadorLogica
@@ -41,12 +52,25 @@ def main():
     inicializar_audio()
     
     # Menú principal inicial
+    # Menú principal inicial
     quiere_jugar = mostrar_menu(pantalla)
+
     if not quiere_jugar:
         pygame.quit()
         sys.exit()
 
+    # Pantalla para escoger uno de los cinco personajes
+    personaje_seleccionado = seleccionar_personaje(pantalla)
+
+    if personaje_seleccionado is None:
+        pygame.quit()
+        sys.exit()
+
+    print("Personaje elegido:", personaje_seleccionado["nombre"])
+    establecer_rostro_jugador(personaje_seleccionado["archivo"])
+
     jugando_partida = True
+
     while jugando_partida: # Ciclo general que mantiene vivo el programa al reiniciar
         camara = Camara()
         cronometro = Cronometro()

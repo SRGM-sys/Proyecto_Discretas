@@ -4,6 +4,7 @@ from config import ANCHO_PANTALLA, ALTO_PANTALLA, TAMANO_CELDA, VERDE_JUGADOR, N
 
 HOJA_JUGADOR_PRO = []
 IMAGEN_MURO = None
+ROSTRO_JUGADOR = None
 
 def inicializar_pantalla():
     global HOJA_JUGADOR_PRO, IMAGEN_MURO, HOJA_FUEGO
@@ -72,6 +73,75 @@ def cargar_sprite_sheet(ruta_archivo, filas, columnas):
             
     return frames
 
+def establecer_rostro_jugador(ruta_imagen):
+    """
+    Carga la imagen seleccionada y la prepara para
+    colocarla sobre la cabeza del personaje original.
+    """
+    global ROSTRO_JUGADOR
+
+    try:
+        imagen_original = pygame.image.load(
+            ruta_imagen
+        ).convert_alpha()
+
+        ancho, alto = imagen_original.get_size()
+
+        # Recortar la imagen como un cuadrado centrado
+        lado = min(ancho, alto)
+
+        recorte_x = (ancho - lado) // 2
+        recorte_y = (alto - lado) // 2
+
+        imagen_cuadrada = imagen_original.subsurface(
+            pygame.Rect(
+                recorte_x,
+                recorte_y,
+                lado,
+                lado
+            )
+        ).copy()
+
+        # Tamaño del rostro dentro del sprite
+        tamano_rostro = 24
+
+        imagen_cuadrada = pygame.transform.smoothscale(
+            imagen_cuadrada,
+            (tamano_rostro, tamano_rostro)
+        )
+
+        # Crear máscara circular
+        mascara = pygame.Surface(
+            (tamano_rostro, tamano_rostro),
+            pygame.SRCALPHA
+        )
+
+        pygame.draw.circle(
+            mascara,
+            (255, 255, 255, 255),
+            (tamano_rostro // 2, tamano_rostro // 2),
+            tamano_rostro // 2
+        )
+
+        imagen_cuadrada.blit(
+            mascara,
+            (0, 0),
+            special_flags=pygame.BLEND_RGBA_MULT
+        )
+
+        ROSTRO_JUGADOR = imagen_cuadrada
+
+        print(
+            f"Rostro cargado correctamente: {ruta_imagen}"
+        )
+
+    except Exception as error:
+        print(
+            f"No se pudo cargar el rostro: {error}"
+        )
+
+        ROSTRO_JUGADOR = None
+
 def dibujar_jugador_completo(pantalla, logica_x, logica_y, frame_actual, tipo_animacion, camara, flip_x=False):
     margen = 10
     mundo_x = (logica_x * TAMANO_CELDA) + (margen // 2)
@@ -90,6 +160,18 @@ def dibujar_jugador_completo(pantalla, logica_x, logica_y, frame_actual, tipo_an
         sprite_a_dibujar = pygame.transform.flip(sprite_a_dibujar, True, False)
         
     pantalla.blit(sprite_a_dibujar, (x_pantalla, y_pantalla))
+    # Dibujar el rostro seleccionado sobre la cabeza
+    if ROSTRO_JUGADOR is not None:
+        posicion_rostro_x = x_pantalla + 15
+        posicion_rostro_y = y_pantalla + 1
+
+        pantalla.blit(
+            ROSTRO_JUGADOR,
+            (
+                posicion_rostro_x,
+                posicion_rostro_y
+            )
+        )
 
 def dibujar_laberinto(pantalla, matriz, camara, frame_fuego=0): # <--- Nuevo parámetro
     pantalla.fill(NEGRO) 
