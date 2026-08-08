@@ -2,31 +2,44 @@
 import random
 import sys
 
-# Aumentamos el límite de recursión por si hacen un mapa inmenso
 sys.setrecursionlimit(5000)
 
 def generar_laberinto(filas, columnas):
-    # 1. Llenar todo de paredes (1)
     matriz = [[1 for _ in range(columnas)] for _ in range(filas)]
     
     def dfs(f, c):
-        matriz[f][c] = 0 # Marcar como camino
+        matriz[f][c] = 0 
         direcciones = [(0, 2), (0, -2), (2, 0), (-2, 0)]
-        random.shuffle(direcciones) # Aleatorizar caminos
+        random.shuffle(direcciones)
         
         for df, dc in direcciones:
             nf, nc = f + df, c + dc
-            # Verificar límites y si es pared
             if 0 < nf < filas - 1 and 0 < nc < columnas - 1 and matriz[nf][nc] == 1:
-                # Romper la pared intermedia
                 matriz[f + df//2][c + dc//2] = 0
                 dfs(nf, nc)
-    
-    # 2. Empezar a excavar desde la coordenada (1, 1)
+
     dfs(1, 1)
     
-    # 3. Definir Inicio (2) y Meta (3)
-    matriz[1][1] = 2
-    matriz[filas - 2][columnas - 2] = 3
+    # --- NUEVA LÓGICA DE INICIO Y META DINÁMICOS ---
+    caminos = []
+    # Recopilar todos los caminos (0) generados
+    for f in range(1, filas - 1):
+        for c in range(1, columnas - 1):
+            if matriz[f][c] == 0:
+                caminos.append((f, c))
+                
+    # Ordenamos los caminos por la suma de sus coordenadas.
+    # Los más cercanos a la esquina superior izquierda quedan al principio.
+    caminos.sort(key=lambda pos: pos[0] + pos[1])
+    
+    # Inicio (2): Elegimos uno aleatorio del primer 20% de los caminos
+    rango_inicio = max(1, len(caminos) // 5)
+    f_inicio, c_inicio = random.choice(caminos[:rango_inicio])
+    matriz[f_inicio][c_inicio] = 2
+    
+    # Meta (3): Elegimos uno aleatorio del último 20% de los caminos
+    rango_meta = max(1, len(caminos) // 5)
+    f_meta, c_meta = random.choice(caminos[-rango_meta:])
+    matriz[f_meta][c_meta] = 3
     
     return matriz
