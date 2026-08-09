@@ -9,6 +9,23 @@ from DEV_1.jugador_logica import JugadorLogica
 
 FILAS, COLUMNAS = 15, 15
 
+# Inicializar todo
+matriz = generar_laberinto(FILAS, COLUMNAS)
+matriz = inyectar_obstaculos(matriz, 5)
+matriz = inyectar_recargas(matriz, 3)
+matriz = iniciar_fuego_seguro(matriz, 2) 
+
+# Buscar el punto de inicio aleatorio que definió el DFS
+f_inicio, c_inicio = 1, 1
+for f in range(FILAS):
+    for c in range(COLUMNAS):
+        if matriz[f][c] == 2:
+            f_inicio, c_inicio = f, c
+            break
+
+# Aparecemos al jugador en las coordenadas dinámicas
+jugador = JugadorLogica(f_inicio, c_inicio)
+
 def dibujar(matriz, jugador):
     os.system('cls' if os.name == 'nt' else 'clear')
     print(f"--- VIDA: {jugador.vida} HP | EXTINTOR: {'█ ' * jugador.carga_extintor}{'░ ' * (jugador.carga_maxima - jugador.carga_extintor)}---")

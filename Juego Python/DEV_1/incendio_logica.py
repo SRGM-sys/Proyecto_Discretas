@@ -1,20 +1,27 @@
 # DEV_1/incendio_logica.py
 import random
 
-# Variable para llevar la cuenta de los pasos del jugador
 turnos_para_fuego = 0
 
 def iniciar_fuego_seguro(matriz, cantidad_focos, dist_minima=6):
-    """Crea fuegos LEJOS del inicio (1, 1) usando distancia Manhattan"""
     filas = len(matriz)
     columnas = len(matriz[0])
     fuegos_colocados = 0
     
+    # Encontrar dinámicamente dónde está el inicio (2)
+    f_inicio, c_inicio = 1, 1
+    for f in range(filas):
+        for c in range(columnas):
+            if matriz[f][c] == 2:
+                f_inicio, c_inicio = f, c
+                break
+                
     while fuegos_colocados < cantidad_focos:
         f = random.randint(1, filas - 2)
         c = random.randint(1, columnas - 2)
         
-        distancia_al_jugador = abs(f - 1) + abs(c - 1)
+        # Calcular distancia respecto al nuevo punto de inicio
+        distancia_al_jugador = abs(f - f_inicio) + abs(c - c_inicio)
         
         if matriz[f][c] == 0 and distancia_al_jugador >= dist_minima:
             matriz[f][c] = 5
