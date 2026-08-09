@@ -1,73 +1,486 @@
-# DEV_2/gestor_menu.py
 import pygame
-import os
-from config import ANCHO_PANTALLA, ALTO_PANTALLA, NEGRO
+
+from config import ANCHO_PANTALLA, ALTO_PANTALLA
+
+from DEV_2.ui_estilo import (
+    NARANJA,
+    CIAN,
+    BLANCO,
+    GRIS,
+    crear_fondo_atmosferico,
+    cargar_logos,
+    dibujar_panel,
+    dibujar_esquinas_hud,
+    crear_particulas,
+    actualizar_particulas
+)
+
 
 def mostrar_menu(pantalla):
-    """
-    Dibuja la pantalla de inicio con una imagen pequeña debajo del texto.
-    """
+
     reloj = pygame.time.Clock()
-    fuente_titulo = pygame.font.SysFont("Arial", 50, bold=True)
-    fuente_instruccion = pygame.font.SysFont("Arial", 24)
-    
-    # --- CARGAR IMAGEN PEQUEÑA ---
-    ruta_actual = os.path.dirname(os.path.abspath(__file__))
-    ruta_raiz = os.path.dirname(ruta_actual)
-    # Cambia 'logo_menu.png' por el nombre real de tu archivo pequeño
-    ruta_imagen = os.path.join(ruta_raiz, 'assets', 'sprites', 'menu_bg.webp') 
-    
-    imagen_menu = None
-    try:
-        # Usamos convert_alpha() por si tu imagen pequeña tiene transparencia
-        img_original = pygame.image.load(ruta_imagen).convert_alpha()
-        
-        # Define aquí el tamaño pequeño que quieras (por ejemplo, 120x120 píxeles)
-        ancho_deseado, alto_deseado = 120, 120
-        imagen_menu = pygame.transform.scale(img_original, (ancho_deseado, alto_deseado))
-    except Exception as e:
-        print(f"No se encontró la imagen en {ruta_imagen}. Error: {e}")
 
-    # Textos renderizados
-    texto_titulo = fuente_titulo.render("LABERINTO SOBRENATURAL", True, (255, 69, 0))
-    texto_sub = fuente_instruccion.render("Sobrevive al terremoto y al fuego", True, (240, 240, 240))
-    texto_start = fuente_instruccion.render("Presiona [ENTER] para comenzar", True, (0, 255, 255))
-    
-    # Posiciones de los textos
-    rect_titulo = texto_titulo.get_rect(center=(ANCHO_PANTALLA // 2, ALTO_PANTALLA // 2 - 80))
-    rect_sub = texto_sub.get_rect(center=(ANCHO_PANTALLA // 2, ALTO_PANTALLA // 2 - 30))
-    rect_start = texto_start.get_rect(center=(ANCHO_PANTALLA // 2, ALTO_PANTALLA // 2 + 130))
-    
-    # Posición de la imagen (centrada horizontalmente y ubicada debajo de los subtítulos)
-    if imagen_menu:
-        rect_imagen = imagen_menu.get_rect(center=(ANCHO_PANTALLA // 2, ALTO_PANTALLA // 2 + 45))
+    fondo = crear_fondo_atmosferico()
 
-    contador_parpadeo = 0
+    logo_feria, logo_espol = cargar_logos()
 
-    en_menu = True
-    while en_menu:
+    particulas = crear_particulas(40)
+
+    # =====================================================
+    # FUENTES
+    # =====================================================
+
+    fuente_titulo = pygame.font.SysFont(
+        "Bahnschrift",
+        64,
+        bold=True
+    )
+
+    fuente_subtitulo = pygame.font.SysFont(
+        "Bahnschrift",
+        39,
+        bold=True
+    )
+
+    fuente_desafio = pygame.font.SysFont(
+        "Bahnschrift",
+        18,
+        bold=True
+    )
+
+    fuente_boton = pygame.font.SysFont(
+        "Bahnschrift",
+        27,
+        bold=True
+    )
+
+    fuente_texto = pygame.font.SysFont(
+        "Bahnschrift",
+        18
+    )
+
+    fuente_pequena = pygame.font.SysFont(
+        "Bahnschrift",
+        15
+    )
+
+    # =====================================================
+    # BUCLE DEL MENÚ
+    # =====================================================
+
+    while True:
+
+        dt = reloj.tick(60)
+
+        # =================================================
+        # EVENTOS
+        # =================================================
+
         for evento in pygame.event.get():
+
             if evento.type == pygame.QUIT:
-                return False 
+                return False
+
             if evento.type == pygame.KEYDOWN:
+
                 if evento.key == pygame.K_RETURN:
-                    return True 
+                    return True
 
-        # Fondo negro limpio para que resalte la imagen pequeña
-        pantalla.fill(NEGRO)
-        
-        # Dibujar textos
-        pantalla.blit(texto_titulo, rect_titulo)
-        pantalla.blit(texto_sub, rect_sub)
+                if evento.key == pygame.K_ESCAPE:
+                    return False
 
-        # Dibujar la imagen pequeña debajo del texto (si cargó bien)
-        if imagen_menu:
-            pantalla.blit(imagen_menu, rect_imagen)
+        # =================================================
+        # FONDO
+        # =================================================
 
-        # Texto parpadeante
-        contador_parpadeo += 1
-        if (contador_parpadeo // 30) % 2 == 0:
-            pantalla.blit(texto_start, rect_start)
+        pantalla.blit(
+            fondo,
+            (0, 0)
+        )
+
+        # =================================================
+        # PARTÍCULAS / BRASAS
+        # =================================================
+
+        capa_particulas = pygame.Surface(
+            (
+                ANCHO_PANTALLA,
+                ALTO_PANTALLA
+            ),
+            pygame.SRCALPHA
+        )
+
+        actualizar_particulas(
+            capa_particulas,
+            particulas,
+            dt
+        )
+
+        pantalla.blit(
+            capa_particulas,
+            (0, 0)
+        )
+
+        # =================================================
+        # LOGO FERIA DE CIENCIAS
+        # =================================================
+
+        if logo_feria:
+
+            rect_feria = logo_feria.get_rect(
+                center=(
+                    ANCHO_PANTALLA // 2 - 115,
+                    60
+                )
+            )
+
+            pantalla.blit(
+                logo_feria,
+                rect_feria
+            )
+
+        # =================================================
+        # LOGO ESPOL
+        # Ya llega blanco desde ui_estilo.py
+        # =================================================
+
+        if logo_espol:
+
+            rect_espol = logo_espol.get_rect(
+                center=(
+                    ANCHO_PANTALLA // 2 + 130,
+                    60
+                )
+            )
+
+            pantalla.blit(
+                logo_espol,
+                rect_espol
+            )
+
+        # =================================================
+        # DIVISOR ENTRE LOGOS
+        # =================================================
+
+        pygame.draw.line(
+            pantalla,
+            (185, 193, 205),
+            (
+                ANCHO_PANTALLA // 2 + 10,
+                32
+            ),
+            (
+                ANCHO_PANTALLA // 2 + 10,
+                90
+            ),
+            1
+        )
+
+        # =================================================
+        # TÍTULO LABERINTO
+        # =================================================
+
+        titulo_sombra = fuente_titulo.render(
+            "LABERINTO",
+            True,
+            (82, 32, 16)
+        )
+
+        titulo = fuente_titulo.render(
+            "LABERINTO",
+            True,
+            (238, 218, 190)
+        )
+
+        rect_titulo = titulo.get_rect(
+            center=(
+                ANCHO_PANTALLA // 2,
+                175
+            )
+        )
+
+        pantalla.blit(
+            titulo_sombra,
+            (
+                rect_titulo.x + 4,
+                rect_titulo.y + 5
+            )
+        )
+
+        pantalla.blit(
+            titulo,
+            rect_titulo
+        )
+
+        # =================================================
+        # SOBRENATURAL
+        # =================================================
+
+        subtitulo = fuente_subtitulo.render(
+            "SOBRENATURAL",
+            True,
+            CIAN
+        )
+
+        pantalla.blit(
+            subtitulo,
+            subtitulo.get_rect(
+                center=(
+                    ANCHO_PANTALLA // 2,
+                    226
+                )
+            )
+        )
+
+        # =================================================
+        # LÍNEAS DECORATIVAS
+        # =================================================
+
+        pygame.draw.line(
+            pantalla,
+            CIAN,
+            (120, 260),
+            (310, 260),
+            2
+        )
+
+        pygame.draw.line(
+            pantalla,
+            NARANJA,
+            (490, 260),
+            (680, 260),
+            2
+        )
+
+        pygame.draw.circle(
+            pantalla,
+            NARANJA,
+            (
+                ANCHO_PANTALLA // 2,
+                260
+            ),
+            10,
+            2
+        )
+
+        pygame.draw.circle(
+            pantalla,
+            CIAN,
+            (
+                ANCHO_PANTALLA // 2,
+                260
+            ),
+            4
+        )
+
+        # =================================================
+        # DESAFÍO DFS
+        # =================================================
+
+        rect_desafio = pygame.Rect(
+            ANCHO_PANTALLA // 2 - 95,
+            276,
+            190,
+            34
+        )
+
+        dibujar_panel(
+            pantalla,
+            rect_desafio,
+            borde=NARANJA,
+            relleno=(20, 16, 18, 220),
+            grosor=1
+        )
+
+        texto_desafio = fuente_desafio.render(
+            "DESAFÍO DFS",
+            True,
+            NARANJA
+        )
+
+        pantalla.blit(
+            texto_desafio,
+            texto_desafio.get_rect(
+                center=rect_desafio.center
+            )
+        )
+
+        # =================================================
+        # BOTÓN INICIAR
+        # =================================================
+
+        rect_iniciar = pygame.Rect(
+            ANCHO_PANTALLA // 2 - 170,
+            330,
+            340,
+            75
+        )
+
+        dibujar_panel(
+            pantalla,
+            rect_iniciar,
+            borde=NARANJA,
+            relleno=(21, 18, 20, 225),
+            grosor=2,
+            glow=True
+        )
+
+        # Triángulo PLAY
+        pygame.draw.polygon(
+            pantalla,
+            NARANJA,
+            [
+                (
+                    rect_iniciar.x + 40,
+                    rect_iniciar.centery - 15
+                ),
+                (
+                    rect_iniciar.x + 40,
+                    rect_iniciar.centery + 15
+                ),
+                (
+                    rect_iniciar.x + 65,
+                    rect_iniciar.centery
+                )
+            ]
+        )
+
+        texto_iniciar = fuente_boton.render(
+            "INICIAR",
+            True,
+            BLANCO
+        )
+
+        pantalla.blit(
+            texto_iniciar,
+            texto_iniciar.get_rect(
+                center=(
+                    rect_iniciar.centerx + 25,
+                    rect_iniciar.centery
+                )
+            )
+        )
+
+        # =================================================
+        # PERSONAJES DISPONIBLES
+        # =================================================
+
+        rect_info = pygame.Rect(
+            ANCHO_PANTALLA // 2 - 140,
+            425,
+            280,
+            48
+        )
+
+        dibujar_panel(
+            pantalla,
+            rect_info,
+            borde=CIAN,
+            relleno=(13, 22, 34, 210),
+            grosor=1
+        )
+
+        texto_info = fuente_pequena.render(
+            "4 PERSONAJES DISPONIBLES",
+            True,
+            CIAN
+        )
+
+        pantalla.blit(
+            texto_info,
+            texto_info.get_rect(
+                center=rect_info.center
+            )
+        )
+
+        # =================================================
+        # ENTER
+        # =================================================
+
+        texto_enter = fuente_texto.render(
+            "ENTER  para comenzar",
+            True,
+            CIAN
+        )
+
+        pantalla.blit(
+            texto_enter,
+            texto_enter.get_rect(
+                center=(
+                    ANCHO_PANTALLA // 2,
+                    510
+                )
+            )
+        )
+
+        # =================================================
+        # ESC
+        # =================================================
+
+        texto_esc = fuente_texto.render(
+            "ESC  para salir",
+            True,
+            GRIS
+        )
+
+        pantalla.blit(
+            texto_esc,
+            texto_esc.get_rect(
+                center=(
+                    ANCHO_PANTALLA // 2,
+                    540
+                )
+            )
+        )
+
+        # =================================================
+        # TEXTO INFERIOR IZQUIERDO
+        # =================================================
+
+        texto_izq = fuente_pequena.render(
+            "Ciencia, ingenio y valentía.",
+            True,
+            (105, 198, 255)
+        )
+
+        pantalla.blit(
+            texto_izq,
+            (
+                30,
+                ALTO_PANTALLA - 32
+            )
+        )
+
+        # =================================================
+        # TEXTO INFERIOR DERECHO
+        # =================================================
+
+        texto_der = fuente_pequena.render(
+            "Cada decisión cuenta.",
+            True,
+            (255, 153, 78)
+        )
+
+        pantalla.blit(
+            texto_der,
+            texto_der.get_rect(
+                topright=(
+                    ANCHO_PANTALLA - 30,
+                    ALTO_PANTALLA - 32
+                )
+            )
+        )
+
+        # =================================================
+        # ESQUINAS
+        # =================================================
+
+        dibujar_esquinas_hud(
+            pantalla
+        )
+
+        # =================================================
+        # ACTUALIZAR
+        # =================================================
 
         pygame.display.flip()
-        reloj.tick(60)

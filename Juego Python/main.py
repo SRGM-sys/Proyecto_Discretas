@@ -2,14 +2,19 @@ import sys
 import os
 import random
 
-ruta_raiz = os.path.dirname(os.path.abspath(__file__))          #holaaa
+ruta_raiz = os.path.dirname(os.path.abspath(__file__))
+
 if ruta_raiz not in sys.path:
     sys.path.insert(0, ruta_raiz)
 
 import pygame
+
 from config import FILAS, COLUMNAS, FPS, TAMANO_CELDA
 
-# Importes tuyos (DEV_2)
+# =========================================================
+# DEV_2
+# =========================================================
+
 from DEV_2.gestor_graficos import (
     inicializar_pantalla,
     dibujar_laberinto,
@@ -17,192 +22,544 @@ from DEV_2.gestor_graficos import (
     dibujar_hud,
     mostrar_pantalla_fin,
     actualizar_pantalla,
-    establecer_rostro_jugador
+    establecer_personaje
 )
+
 from DEV_2.gestor_eventos import procesar_inputs
 from DEV_2.camara import Camara
 from DEV_2.gestor_menu import mostrar_menu
-#
 from DEV_2.selector_personajes import seleccionar_personaje
 from DEV_2.lector_assets import inicializar_audio
 
 
-# Importes de tu pana (DEV_1)
+# =========================================================
+# DEV_1
+# =========================================================
+
 from DEV_1.jugador_logica import JugadorLogica
 from DEV_1.generador_dfs import generar_laberinto
-from DEV_1.trampas import inyectar_obstaculos, inyectar_recargas
-from DEV_1.incendio_logica import iniciar_fuego_seguro, actualizar_fuego_por_turnos
+from DEV_1.trampas import (
+    inyectar_obstaculos,
+    inyectar_recargas
+)
+
+from DEV_1.incendio_logica import (
+    iniciar_fuego_seguro,
+    actualizar_fuego_por_turnos
+)
+
 from DEV_1.cronometro import Cronometro
 
 
-# Bypass para hacer los pasillos anchos sin tocar DEV_1
+# =========================================================
+# PASILLOS ANCHOS
+# =========================================================
+
 def hacer_pasillos_anchos(matriz_original):
+
     matriz_ancha = []
+
     for fila in matriz_original:
+
         fila_doble = []
+
         for celda in fila:
-            fila_doble.extend([celda, celda]) 
-        matriz_ancha.append(fila_doble)
-        matriz_ancha.append(list(fila_doble)) 
+            fila_doble.extend(
+                [celda, celda]
+            )
+
+        matriz_ancha.append(
+            fila_doble
+        )
+
+        matriz_ancha.append(
+            list(fila_doble)
+        )
+
     return matriz_ancha
 
+
+# =========================================================
+# MAIN
+# =========================================================
+
 def main():
+
+    # -----------------------------------------------------
+    # INICIALIZACIÓN
+    # -----------------------------------------------------
+
     pantalla = inicializar_pantalla()
+
     reloj = pygame.time.Clock()
+
     inicializar_audio()
-    
-    # Menú principal inicial
-    # Menú principal inicial
-    quiere_jugar = mostrar_menu(pantalla)
+
+
+    # =====================================================
+    # MENÚ PRINCIPAL
+    # =====================================================
+
+    quiere_jugar = mostrar_menu(
+        pantalla
+    )
 
     if not quiere_jugar:
+
         pygame.quit()
         sys.exit()
 
-    # Pantalla para escoger uno de los cinco personajes
-    personaje_seleccionado = seleccionar_personaje(pantalla)
+
+    # =====================================================
+    # SELECCIÓN DE PERSONAJE
+    # =====================================================
+
+    personaje_seleccionado = seleccionar_personaje(
+        pantalla
+    )
 
     if personaje_seleccionado is None:
+
         pygame.quit()
         sys.exit()
 
-    print("Personaje elegido:", personaje_seleccionado["nombre"])
-    establecer_rostro_jugador(personaje_seleccionado["archivo"])
+
+    # Cargar el sprite completo seleccionado
+    establecer_personaje(
+        personaje_seleccionado
+    )
+
+    print(
+        "Personaje elegido:",
+        personaje_seleccionado["nombre"]
+    )
+
+
+    # =====================================================
+    # CICLO GENERAL
+    # =====================================================
 
     jugando_partida = True
 
-    while jugando_partida: # Ciclo general que mantiene vivo el programa al reiniciar
+    while jugando_partida:
+
+        # -------------------------------------------------
+        # CÁMARA Y CRONÓMETRO
+        # -------------------------------------------------
+
         camara = Camara()
+
         cronometro = Cronometro()
+
         cronometro.iniciar()
 
-        # Generar mapa
-        matriz_actual = generar_laberinto(FILAS, COLUMNAS)
-        matriz_actual = hacer_pasillos_anchos(matriz_actual)
-        matriz_actual = inyectar_obstaculos(matriz_actual, 5)
-        matriz_actual = inyectar_recargas(matriz_actual, 2)
-        matriz_actual = iniciar_fuego_seguro(matriz_actual, 2)
-        
-        jugador = JugadorLogica(2, 2) 
+
+        # =================================================
+        # GENERAR LABERINTO
+        # =================================================
+
+        matriz_actual = generar_laberinto(
+            FILAS,
+            COLUMNAS
+        )
+
+        matriz_actual = hacer_pasillos_anchos(
+            matriz_actual
+        )
+
+        matriz_actual = inyectar_obstaculos(
+            matriz_actual,
+            5
+        )
+
+        matriz_actual = inyectar_recargas(
+            matriz_actual,
+            2
+        )
+
+        matriz_actual = iniciar_fuego_seguro(
+            matriz_actual,
+            2
+        )
+
+
+        # =================================================
+        # JUGADOR
+        # =================================================
+
+        jugador = JugadorLogica(
+            2,
+            2
+        )
+
+
+        # =================================================
+        # VARIABLES DE ANIMACIÓN
+        # =================================================
 
         indice_frame = 0
+
         temporizador_animacion = 0
-        velocidad_animacion = 150 
-        estado_animacion = 1 
-        cooldown_mov = 0 
+
+        velocidad_animacion = 150
+
+        # 0 = lateral
+        # 1 = frontal
+        # 2 = fuego
+        # 3 = agua
+        estado_animacion = 1
+
+        cooldown_mov = 0
+
         mirando_izquierda = False
+
         tiempo_en_fuego = 0
-        
+
+
+        # =================================================
+        # TERREMOTO
+        # =================================================
+
         temporizador_terremoto = 0
-        tiempo_entre_terremotos = 12000 # 12 segundos (12000 milisegundos)
+
+        tiempo_entre_terremotos = 12000
+
         terremoto_activo = False
-        duracion_terremoto = 1500       # El temblor durará 1.5 segundos
+
+        duracion_terremoto = 1500
+
         tiempo_actual_terremoto = 0
 
+
+        # =================================================
+        # BUCLE DE PARTIDA
+        # =================================================
+
         corriendo = True
+
         while corriendo:
-            dt = reloj.tick(FPS)
+
+            dt = reloj.tick(
+                FPS
+            )
+
+
+            # =============================================
+            # INPUT
+            # =============================================
 
             mov_x, mov_y, salir = procesar_inputs()
+
             if salir:
+
                 pygame.quit()
                 sys.exit()
 
-            # Movimiento y lógica...
+
+            # =============================================
+            # MOVIMIENTO
+            # =============================================
+
             if cooldown_mov <= 0:
+
                 if mov_x != 0 or mov_y != 0:
-                    se_movio = jugador.intentar_moverse(mov_y, mov_x, matriz_actual)
+
+                    se_movio = jugador.intentar_moverse(
+                        mov_y,
+                        mov_x,
+                        matriz_actual
+                    )
+
                     if se_movio:
-                        cooldown_mov = 150 
-                        if mov_x != 0: 
-                            estado_animacion = 0 
-                            mirando_izquierda = (mov_x < 0)
-                        if mov_y != 0: 
-                            estado_animacion = 1 
-                        matriz_actual = actualizar_fuego_por_turnos(matriz_actual, frecuencia=3)
+
+                        cooldown_mov = 150
+
+
+                        # ---------------------------------
+                        # MOVIMIENTO HORIZONTAL
+                        # ---------------------------------
+
+                        if mov_x != 0:
+
+                            estado_animacion = 0
+
+                            mirando_izquierda = (
+                                mov_x < 0
+                            )
+
+
+                        # ---------------------------------
+                        # MOVIMIENTO VERTICAL
+                        # ---------------------------------
+
+                        if mov_y != 0:
+
+                            estado_animacion = 1
+
+
+                        # ---------------------------------
+                        # ACTUALIZAR INCENDIO
+                        # ---------------------------------
+
+                        matriz_actual = (
+                            actualizar_fuego_por_turnos(
+                                matriz_actual,
+                                frecuencia=3
+                            )
+                        )
+
             else:
+
                 cooldown_mov -= dt
 
-            # Verificación de fin de partida
-            if not jugador.esta_vivo or jugador.ha_ganado:
-                dibujar_laberinto(pantalla, matriz_actual, camara)
-                dibujar_jugador_completo(pantalla, jugador.columna, jugador.fila, indice_frame, estado_animacion, camara, mirando_izquierda)
+
+            # =============================================
+            # FIN DE PARTIDA
+            # =============================================
+
+            if (
+                not jugador.esta_vivo
+                or jugador.ha_ganado
+            ):
+
+                dibujar_laberinto(
+                    pantalla,
+                    matriz_actual,
+                    camara
+                )
+
+                dibujar_jugador_completo(
+                    pantalla,
+                    jugador.columna,
+                    jugador.fila,
+                    indice_frame,
+                    estado_animacion,
+                    camara,
+                    mirando_izquierda
+                )
+
                 actualizar_pantalla()
-                
-                # Captura la decisión de la pantalla de fin
-                quiere_reintentar = mostrar_pantalla_fin(pantalla, jugador.ha_ganado)
-                
-                corriendo = False # Rompe el bucle de la partida actual
+
+
+                quiere_reintentar = mostrar_pantalla_fin(
+                    pantalla,
+                    jugador.ha_ganado
+                )
+
+                corriendo = False
+
+
+                # Si presiona ESC
                 if not quiere_reintentar:
-                    jugando_partida = False # Si dio ESC, rompe el ciclo general y cierra
+
+                    jugando_partida = False
+
+                # Si presiona R:
+                # vuelve a generar el laberinto
+                # con EL MISMO personaje.
+
                 break
 
-            
-            # --- ANIMACIÓN GENERAL ---
+
+            # =============================================
+            # ANIMACIÓN
+            # =============================================
+
             temporizador_animacion += dt
-            if temporizador_animacion >= velocidad_animacion:
-                indice_frame = (indice_frame + 1) % 4
+
+            if (
+                temporizador_animacion
+                >= velocidad_animacion
+            ):
+
+                indice_frame = (
+                    indice_frame + 1
+                ) % 4
+
                 temporizador_animacion = 0
 
-            # --- VERIFICAR TIEMPO EN EL FUEGO ---
+
+            # =============================================
+            # ESTADO VISUAL
+            # =============================================
+
             estado_render = estado_animacion
+
             frame_render = indice_frame
-            
-            # Revisamos si la chica está parada sobre una casilla de fuego (5)
-            if matriz_actual[jugador.fila][jugador.columna] == 5:
-                tiempo_en_fuego += dt # Sumamos el tiempo (dt está en milisegundos)
-                
-                if tiempo_en_fuego >= 2000: # Si pasan 2 segundos (2000 ms)
-                    estado_render = 2 # Cambiamos a la Fila 3 de chica_pro.jpg (quemándose)
-                    
-                    # Con módulo 2 forzamos a que solo alterne entre los frames 0 y 1
-                    frame_render = indice_frame % 2 
+
+
+            # =============================================
+            # PERSONAJE SOBRE EL FUEGO
+            # =============================================
+
+            if (
+                matriz_actual[
+                    jugador.fila
+                ][
+                    jugador.columna
+                ]
+                == 5
+            ):
+
+                tiempo_en_fuego += dt
+
+
+                # Después de 2 segundos
+                if tiempo_en_fuego >= 2000:
+
+                    # Fila de fuego
+                    estado_render = 2
+
+                    frame_render = (
+                        indice_frame % 4
+                    )
+
             else:
-                tiempo_en_fuego = 0 # Si sale del fuego, se reinicia el contador al instante
-                
-            # --- LÓGICA DEL TERREMOTO ---
+
+                tiempo_en_fuego = 0
+
+
+            # =============================================
+            # TERREMOTO
+            # =============================================
+
             if not terremoto_activo:
+
                 temporizador_terremoto += dt
-                if temporizador_terremoto >= tiempo_entre_terremotos:
+
+                if (
+                    temporizador_terremoto
+                    >= tiempo_entre_terremotos
+                ):
+
                     terremoto_activo = True
+
                     temporizador_terremoto = 0
+
                     tiempo_actual_terremoto = 0
+
             else:
+
                 tiempo_actual_terremoto += dt
-                if tiempo_actual_terremoto >= duracion_terremoto:
-                    terremoto_activo = False # Se acaba el temblor
-            
-            
-            # Desastres manuales y renderizado normal...
+
+                if (
+                    tiempo_actual_terremoto
+                    >= duracion_terremoto
+                ):
+
+                    terremoto_activo = False
+
+
+            # =============================================
+            # PRUEBAS MANUALES DE ANIMACIÓN
+            # =============================================
+
             teclas = pygame.key.get_pressed()
-            if teclas[pygame.K_1]: estado_animacion = 1 
-            elif teclas[pygame.K_2]: estado_animacion = 2 
-            elif teclas[pygame.K_3]: estado_animacion = 3 
 
-            temporizador_animacion += dt
-            if temporizador_animacion >= velocidad_animacion:
-                indice_frame = (indice_frame + 1) % 4
-                temporizador_animacion = 0
 
-            # --- CÁMARA Y RENDERIZADO ---
-            jugador_px = jugador.columna * TAMANO_CELDA
-            jugador_py = jugador.fila * TAMANO_CELDA
-            camara.actualizar(jugador_px, jugador_py)
+            # Tecla 1 = animación frontal
+            if teclas[pygame.K_1]:
 
-            # --- EFECTO DE SCREEN SHAKE (TEMBLOR) ---
+                estado_animacion = 1
+
+
+            # Tecla 2 = animación fuego
+            elif teclas[pygame.K_2]:
+
+                estado_animacion = 2
+
+
+            # Tecla 3 = animación agua
+            elif teclas[pygame.K_3]:
+
+                estado_animacion = 3
+
+
+            # =============================================
+            # CÁMARA
+            # =============================================
+
+            jugador_px = (
+                jugador.columna
+                * TAMANO_CELDA
+            )
+
+            jugador_py = (
+                jugador.fila
+                * TAMANO_CELDA
+            )
+
+            camara.actualizar(
+                jugador_px,
+                jugador_py
+            )
+
+
+            # =============================================
+            # SCREEN SHAKE
+            # =============================================
+
             if terremoto_activo:
-                intensidad = 8 # Cuántos píxeles se sacudirá la pantalla (ajusta a tu gusto)
-                camara.desplazamiento_x += random.randint(-intensidad, intensidad)
-                camara.desplazamiento_y += random.randint(-intensidad, intensidad)
 
-            dibujar_laberinto(pantalla, matriz_actual, camara, indice_frame)
-            dibujar_jugador_completo(pantalla, jugador.columna, jugador.fila, frame_render, estado_render, camara, mirando_izquierda)
-            dibujar_hud(pantalla, jugador, cronometro)
-            
+                intensidad = 8
+
+                camara.desplazamiento_x += (
+                    random.randint(
+                        -intensidad,
+                        intensidad
+                    )
+                )
+
+                camara.desplazamiento_y += (
+                    random.randint(
+                        -intensidad,
+                        intensidad
+                    )
+                )
+
+
+            # =============================================
+            # DIBUJAR
+            # =============================================
+
+            dibujar_laberinto(
+                pantalla,
+                matriz_actual,
+                camara,
+                indice_frame
+            )
+
+            dibujar_jugador_completo(
+                pantalla,
+                jugador.columna,
+                jugador.fila,
+                frame_render,
+                estado_render,
+                camara,
+                mirando_izquierda
+            )
+
+            dibujar_hud(
+                pantalla,
+                jugador,
+                cronometro
+            )
+
             actualizar_pantalla()
 
+
+    # =====================================================
+    # CERRAR
+    # =====================================================
+
     pygame.quit()
+
     sys.exit()
+
+
+# =========================================================
+# EJECUCIÓN
+# =========================================================
 
 if __name__ == "__main__":
     main()

@@ -1,257 +1,1170 @@
 import pygame
 
-from config import ANCHO_PANTALLA, ALTO_PANTALLA, NEGRO
+from config import (
+    ANCHO_PANTALLA,
+    ALTO_PANTALLA
+)
+
 from DEV_2.personajes import PERSONAJES
 
+from DEV_2.ui_estilo import (
+    NARANJA,
+    CIAN,
+    CIAN_CLARO,
+    BLANCO,
+    crear_fondo_atmosferico,
+    cargar_logos,
+    dibujar_panel,
+    dibujar_esquinas_hud,
+    crear_particulas,
+    actualizar_particulas
+)
 
-def cargar_vista_previa(ruta_imagen):
-    """
-    Carga la imagen del personaje y la adapta
-    para mostrarla en la pantalla de selección.
-    """
+
+# =========================================================
+# DETECTAR FILAS VISUALES
+# =========================================================
+
+def detectar_bandas_visuales(
+    imagen,
+    tolerancia=4,
+    margen=5
+):
+
+    ancho, alto = imagen.get_size()
+
+    filas_visibles = []
+
+    for y in range(alto):
+
+        franja = imagen.subsurface(
+            (
+                0,
+                y,
+                ancho,
+                1
+            )
+        )
+
+        if franja.get_bounding_rect(
+            min_alpha=1
+        ).width > 0:
+
+            filas_visibles.append(y)
+
+
+    if not filas_visibles:
+
+        return []
+
+
+    grupos = []
+
+    inicio = filas_visibles[0]
+    anterior = filas_visibles[0]
+
+
+    for y in filas_visibles[1:]:
+
+        if y <= anterior + tolerancia:
+
+            anterior = y
+
+        else:
+
+            grupos.append(
+                (
+                    inicio,
+                    anterior
+                )
+            )
+
+            inicio = y
+            anterior = y
+
+
+    grupos.append(
+        (
+            inicio,
+            anterior
+        )
+    )
+
+
+    resultado = []
+
+    for inicio, final in grupos:
+
+        resultado.append(
+            (
+                max(
+                    0,
+                    inicio - margen
+                ),
+
+                min(
+                    alto,
+                    final + margen + 1
+                )
+            )
+        )
+
+
+    return resultado
+
+
+# =========================================================
+# OBTENER PREVIA DEL PERSONAJE
+# =========================================================
+
+def obtener_frame_previa(
+    personaje
+):
+
     try:
-        imagen = pygame.image.load(ruta_imagen).convert_alpha()
-        imagen = pygame.transform.smoothscale(imagen, (95, 95))
-        return imagen
+
+        hoja = pygame.image.load(
+            personaje["sprite"]
+        ).convert_alpha()
+
+
+        columnas = personaje[
+            "columnas"
+        ]
+
+
+        modo = personaje.get(
+            "modo_corte",
+            "rejilla"
+        )
+
+
+        # Usamos una pose frontal
+        fila = 1
+        columna = 0
+
+
+        # =================================================
+        # POU / PEPPA
+        # =================================================
+
+        if modo == "visual":
+
+            bandas = detectar_bandas_visuales(
+                hoja
+            )
+
+
+            if not bandas:
+
+                raise ValueError(
+                    "No se detectaron filas visuales"
+                )
+
+
+            if fila >= len(
+                bandas
+            ):
+
+                fila = 0
+
+
+            y0, y1 = bandas[
+                fila
+            ]
+
+
+            ancho_columna = (
+                hoja.get_width()
+                // columnas
+            )
+
+
+            rect = pygame.Rect(
+                columna * ancho_columna,
+                y0,
+                ancho_columna,
+                y1 - y0
+            )
+
+
+        # =================================================
+        # MINION / PRINCIPAL
+        # =================================================
+
+        else:
+
+            filas = personaje[
+                "filas"
+            ]
+
+
+            ancho_frame = (
+                hoja.get_width()
+                // columnas
+            )
+
+
+            alto_frame = (
+                hoja.get_height()
+                // filas
+            )
+
+
+            rect = pygame.Rect(
+                columna * ancho_frame,
+                fila * alto_frame,
+                ancho_frame,
+                alto_frame
+            )
+
+
+        # =================================================
+        # EXTRAER FRAME
+        # =================================================
+
+        frame = hoja.subsurface(
+            rect
+        ).copy()
+
+
+        visible = frame.get_bounding_rect(
+            min_alpha=1
+        )
+
+
+        if (
+            visible.width > 0
+            and visible.height > 0
+        ):
+
+            frame = frame.subsurface(
+                visible
+            ).copy()
+
+
+        # =================================================
+        # ESCALAR SIN DEFORMAR
+        # =================================================
+
+        max_ancho = 120
+        max_alto = 128
+
+
+        ancho, alto = frame.get_size()
+
+
+        escala = min(
+            max_ancho / ancho,
+            max_alto / alto
+        )
+
+
+        nuevo_ancho = max(
+            1,
+            int(
+                ancho * escala
+            )
+        )
+
+
+        nuevo_alto = max(
+            1,
+            int(
+                alto * escala
+            )
+        )
+
+
+        frame = pygame.transform.smoothscale(
+            frame,
+            (
+                nuevo_ancho,
+                nuevo_alto
+            )
+        )
+
+
+        return frame
+
 
     except Exception as error:
-        print(f"No se pudo cargar {ruta_imagen}: {error}")
 
-        imagen_error = pygame.Surface((95, 95))
-        imagen_error.fill((100, 100, 100))
-
-        fuente = pygame.font.SysFont("Arial", 50, bold=True)
-        signo = fuente.render("?", True, (255, 255, 255))
-        rect_signo = signo.get_rect(center=(47, 47))
-        imagen_error.blit(signo, rect_signo)
-
-        return imagen_error
+        print(
+            f"Error cargando previa de "
+            f"{personaje['nombre']}: "
+            f"{error}"
+        )
 
 
-def seleccionar_personaje(pantalla):
-    """
-    Muestra los personajes y devuelve
-    el personaje elegido por el usuario.
+        error_img = pygame.Surface(
+            (
+                100,
+                120
+            ),
+            pygame.SRCALPHA
+        )
 
-    Devuelve None si el usuario desea salir.
-    """
+
+        pygame.draw.rect(
+            error_img,
+            (
+                70,
+                75,
+                90
+            ),
+            error_img.get_rect(),
+            border_radius=12
+        )
+
+
+        fuente_error = pygame.font.SysFont(
+            "Arial",
+            50,
+            bold=True
+        )
+
+
+        texto_error = fuente_error.render(
+            "?",
+            True,
+            BLANCO
+        )
+
+
+        error_img.blit(
+            texto_error,
+            texto_error.get_rect(
+                center=error_img.get_rect().center
+            )
+        )
+
+
+        return error_img
+
+
+# =========================================================
+# SELECTOR DE PERSONAJES
+# =========================================================
+
+def seleccionar_personaje(
+    pantalla
+):
+
     reloj = pygame.time.Clock()
 
-    fuente_titulo = pygame.font.SysFont("Arial", 34, bold=True)
-    fuente_nombre = pygame.font.SysFont("Arial", 18, bold=True)
-    fuente_numero = pygame.font.SysFont("Arial", 15)
-    fuente_instrucciones = pygame.font.SysFont("Arial", 20)
+
+    # =====================================================
+    # FONDO
+    # =====================================================
+
+    fondo = crear_fondo_atmosferico(
+        semilla=19
+    )
+
+
+    # =====================================================
+    # LOGOS
+    # =====================================================
+
+    logo_feria, logo_espol = cargar_logos()
+
+
+    # =====================================================
+    # PARTÍCULAS
+    # =====================================================
+
+    particulas = crear_particulas(
+        28
+    )
+
+
+    # =====================================================
+    # FUENTES
+    # =====================================================
+
+    fuente_titulo = pygame.font.SysFont(
+        "Bahnschrift",
+        39,
+        bold=True
+    )
+
+
+    fuente_nombre = pygame.font.SysFont(
+        "Bahnschrift",
+        20,
+        bold=True
+    )
+
+
+    fuente_chip = pygame.font.SysFont(
+        "Bahnschrift",
+        14,
+        bold=True
+    )
+
+
+    fuente_instruccion = pygame.font.SysFont(
+        "Bahnschrift",
+        18
+    )
+
+
+    fuente_enter = pygame.font.SysFont(
+        "Bahnschrift",
+        20,
+        bold=True
+    )
+
+
+    fuente_seleccion = pygame.font.SysFont(
+        "Bahnschrift",
+        16,
+        bold=True
+    )
+
+
+    # =====================================================
+    # PREVISUALIZACIONES
+    # =====================================================
 
     imagenes = []
 
     for personaje in PERSONAJES:
-        imagen = cargar_vista_previa(personaje["archivo"])
-        imagenes.append(imagen)
 
-    indice_seleccionado = 0
+        imagenes.append(
+            obtener_frame_previa(
+                personaje
+            )
+        )
 
-    teclas_numericas = {
-        pygame.K_1: 0,
-        pygame.K_2: 1,
-        pygame.K_3: 2,
-        pygame.K_4: 3,
-        pygame.K_5: 4,
-        pygame.K_6: 5
-    }
 
-    columnas = 3
+    # Primer personaje seleccionado
+    indice = 0
+
+
+    # =====================================================
+    # LOOP
+    # =====================================================
 
     while True:
+
+        dt = reloj.tick(
+            60
+        )
+
+
+        # =================================================
+        # EVENTOS
+        # =================================================
+
         for evento in pygame.event.get():
 
+
             if evento.type == pygame.QUIT:
+
                 return None
+
 
             if evento.type == pygame.KEYDOWN:
 
-                # Elegir directamente con números
-                if evento.key in teclas_numericas:
-                    indice_seleccionado = teclas_numericas[evento.key]
 
-                # Izquierda
-                elif evento.key in (pygame.K_LEFT, pygame.K_a):
-                    indice_seleccionado -= 1
-                    if indice_seleccionado < 0:
-                        indice_seleccionado = len(PERSONAJES) - 1
+                # -----------------------------------------
+                # IZQUIERDA
+                # -----------------------------------------
 
-                # Derecha
-                elif evento.key in (pygame.K_RIGHT, pygame.K_d):
-                    indice_seleccionado += 1
-                    if indice_seleccionado >= len(PERSONAJES):
-                        indice_seleccionado = 0
+                if evento.key in (
+                    pygame.K_LEFT,
+                    pygame.K_a
+                ):
 
-                # Arriba
-                elif evento.key in (pygame.K_UP, pygame.K_w):
-                    indice_seleccionado -= columnas
-                    if indice_seleccionado < 0:
-                        indice_seleccionado += len(PERSONAJES)
+                    indice = (
+                        indice - 1
+                    ) % len(
+                        PERSONAJES
+                    )
 
-                # Abajo
-                elif evento.key in (pygame.K_DOWN, pygame.K_s):
-                    indice_seleccionado += columnas
-                    if indice_seleccionado >= len(PERSONAJES):
-                        indice_seleccionado -= len(PERSONAJES)
 
-                # Confirmar selección
-                elif evento.key == pygame.K_RETURN:
-                    return PERSONAJES[indice_seleccionado]
+                # -----------------------------------------
+                # DERECHA
+                # -----------------------------------------
 
-                # Salir
-                elif evento.key == pygame.K_ESCAPE:
+                elif evento.key in (
+                    pygame.K_RIGHT,
+                    pygame.K_d
+                ):
+
+                    indice = (
+                        indice + 1
+                    ) % len(
+                        PERSONAJES
+                    )
+
+
+                # -----------------------------------------
+                # ENTER = CONFIRMAR
+                # -----------------------------------------
+
+                elif (
+                    evento.key
+                    == pygame.K_RETURN
+                ):
+
+                    return PERSONAJES[
+                        indice
+                    ]
+
+
+                # -----------------------------------------
+                # ESC = SALIR
+                # -----------------------------------------
+
+                elif (
+                    evento.key
+                    == pygame.K_ESCAPE
+                ):
+
                     return None
 
-        pantalla.fill(NEGRO)
 
-        # Título
-        texto_titulo = fuente_titulo.render(
+        # =================================================
+        # FONDO
+        # =================================================
+
+        pantalla.blit(
+            fondo,
+            (
+                0,
+                0
+            )
+        )
+
+
+        # =================================================
+        # PARTÍCULAS
+        # =================================================
+
+        capa_particulas = pygame.Surface(
+            (
+                ANCHO_PANTALLA,
+                ALTO_PANTALLA
+            ),
+            pygame.SRCALPHA
+        )
+
+
+        actualizar_particulas(
+            capa_particulas,
+            particulas,
+            dt
+        )
+
+
+        pantalla.blit(
+            capa_particulas,
+            (
+                0,
+                0
+            )
+        )
+
+
+        # =================================================
+        # LOGO FERIA
+        # =================================================
+
+        if logo_feria:
+
+            ancho_logo = 150
+
+
+            alto_logo = int(
+                logo_feria.get_height()
+                * ancho_logo
+                / logo_feria.get_width()
+            )
+
+
+            mini_feria = pygame.transform.smoothscale(
+                logo_feria,
+                (
+                    ancho_logo,
+                    alto_logo
+                )
+            )
+
+
+            pantalla.blit(
+                mini_feria,
+                (
+                    24,
+                    18
+                )
+            )
+
+
+        # =================================================
+        # LOGO ESPOL
+        # =================================================
+
+        if logo_espol:
+
+            ancho_logo = 112
+
+
+            alto_logo = int(
+                logo_espol.get_height()
+                * ancho_logo
+                / logo_espol.get_width()
+            )
+
+
+            mini_espol = pygame.transform.smoothscale(
+                logo_espol,
+                (
+                    ancho_logo,
+                    alto_logo
+                )
+            )
+
+
+            rect_espol = mini_espol.get_rect(
+                topright=(
+                    ANCHO_PANTALLA - 24,
+                    22
+                )
+            )
+
+
+            pantalla.blit(
+                mini_espol,
+                rect_espol
+            )
+
+
+        # =================================================
+        # TÍTULO
+        # =================================================
+
+        titulo_sombra = fuente_titulo.render(
             "SELECCIONA TU PERSONAJE",
             True,
-            (255, 100, 20)
+            (
+                75,
+                33,
+                20
+            )
         )
 
-        rect_titulo = texto_titulo.get_rect(
-            center=(ANCHO_PANTALLA // 2, 65)
+
+        titulo = fuente_titulo.render(
+            "SELECCIONA TU PERSONAJE",
+            True,
+            (
+                238,
+                209,
+                180
+            )
         )
 
-        pantalla.blit(texto_titulo, rect_titulo)
 
-        # Diseño en 2 filas x 3 columnas
-        columnas = 3
-        filas = 2
-        ancho_tarjeta = 150
-        alto_tarjeta = 180
-        separacion_x = 20
-        separacion_y = 25
+        rect_titulo = titulo.get_rect(
+            center=(
+                ANCHO_PANTALLA // 2,
+                105
+            )
+        )
 
-        ancho_total = columnas * ancho_tarjeta + (columnas - 1) * separacion_x
-        inicio_x = (ANCHO_PANTALLA - ancho_total) // 2
-        inicio_y = 130
 
-        for indice, personaje in enumerate(PERSONAJES):
-            fila = indice // columnas
-            columna = indice % columnas
+        pantalla.blit(
+            titulo_sombra,
+            (
+                rect_titulo.x + 3,
+                rect_titulo.y + 3
+            )
+        )
 
-            posicion_x = inicio_x + columna * (ancho_tarjeta + separacion_x)
-            posicion_y = inicio_y + fila * (alto_tarjeta + separacion_y)
 
-            tarjeta = pygame.Rect(
-                posicion_x,
-                posicion_y,
+        pantalla.blit(
+            titulo,
+            rect_titulo
+        )
+
+
+        # =================================================
+        # LÍNEA DECORATIVA
+        # =================================================
+
+        pygame.draw.line(
+            pantalla,
+            CIAN,
+            (
+                220,
+                136
+            ),
+            (
+                580,
+                136
+            ),
+            2
+        )
+
+
+        pygame.draw.circle(
+            pantalla,
+            NARANJA,
+            (
+                ANCHO_PANTALLA // 2,
+                136
+            ),
+            6,
+            2
+        )
+
+
+        # =================================================
+        # CONFIGURACIÓN DE TARJETAS
+        # =================================================
+
+        ancho_tarjeta = 170
+        alto_tarjeta = 282
+
+        separacion = 18
+
+
+        total = (
+            len(PERSONAJES)
+            * ancho_tarjeta
+            +
+            (
+                len(PERSONAJES)
+                - 1
+            )
+            * separacion
+        )
+
+
+        inicio_x = (
+            ANCHO_PANTALLA
+            - total
+        ) // 2
+
+
+        y_tarjeta = 160
+
+
+        # =================================================
+        # DIBUJAR PERSONAJES
+        # =================================================
+
+        for i, personaje in enumerate(
+            PERSONAJES
+        ):
+
+
+            x = (
+                inicio_x
+                + i
+                * (
+                    ancho_tarjeta
+                    + separacion
+                )
+            )
+
+
+            rect = pygame.Rect(
+                x,
+                y_tarjeta,
                 ancho_tarjeta,
                 alto_tarjeta
             )
 
-            if indice == indice_seleccionado:
-                color_fondo = (65, 45, 25)
-                color_borde = (255, 140, 0)
-                grosor_borde = 5
+
+            seleccionado = (
+                i == indice
+            )
+
+
+            # =============================================
+            # COLORES DE LA TARJETA
+            # =============================================
+
+            if seleccionado:
+
+                borde = NARANJA
+
+                relleno = (
+                    27,
+                    20,
+                    22,
+                    230
+                )
+
             else:
-                color_fondo = (30, 30, 45)
-                color_borde = (120, 120, 120)
-                grosor_borde = 2
+
+                borde = (
+                    55,
+                    145,
+                    166
+                )
+
+                relleno = (
+                    12,
+                    23,
+                    35,
+                    220
+                )
+
+
+            # =============================================
+            # PANEL
+            # =============================================
+
+            dibujar_panel(
+                pantalla,
+                rect,
+                borde=borde,
+                relleno=relleno,
+                grosor=(
+                    3
+                    if seleccionado
+                    else 1
+                ),
+                glow=seleccionado
+            )
+
+
+            # =============================================
+            # RADAR DECORATIVO
+            # =============================================
+
+            centro = (
+                rect.centerx,
+                rect.y + 104
+            )
+
+
+            pygame.draw.circle(
+                pantalla,
+                borde,
+                centro,
+                60,
+                1
+            )
+
+
+            pygame.draw.circle(
+                pantalla,
+                borde,
+                centro,
+                45,
+                1
+            )
+
+
+            pygame.draw.line(
+                pantalla,
+                borde,
+                (
+                    centro[0] - 62,
+                    centro[1]
+                ),
+                (
+                    centro[0] + 62,
+                    centro[1]
+                ),
+                1
+            )
+
+
+            pygame.draw.line(
+                pantalla,
+                borde,
+                (
+                    centro[0],
+                    centro[1] - 62
+                ),
+                (
+                    centro[0],
+                    centro[1] + 62
+                ),
+                1
+            )
+
+
+            # =============================================
+            # IMAGEN DEL PERSONAJE
+            # =============================================
+
+            imagen = imagenes[
+                i
+            ]
+
+
+            pantalla.blit(
+                imagen,
+                imagen.get_rect(
+                    center=centro
+                )
+            )
+
+
+            # =============================================
+            # NOMBRE
+            # =============================================
+
+            nombre = fuente_nombre.render(
+                personaje[
+                    "nombre"
+                ],
+                True,
+                BLANCO
+            )
+
+
+            pantalla.blit(
+                nombre,
+                nombre.get_rect(
+                    center=(
+                        rect.centerx,
+                        rect.y + 205
+                    )
+                )
+            )
+
+
+            # =============================================
+            # BOTÓN ELEGIR / ELEGIDO
+            # =============================================
+
+            boton_estado = pygame.Rect(
+                rect.x + 28,
+                rect.y + 235,
+                rect.width - 56,
+                34
+            )
+
+
+            if seleccionado:
+
+                color_fondo_boton = NARANJA
+
+                color_borde_boton = (
+                    255,
+                    190,
+                    120
+                )
+
+                color_texto_boton = (
+                    25,
+                    15,
+                    12
+                )
+
+                texto_estado = (
+                    "ELEGIDO"
+                )
+
+            else:
+
+                color_fondo_boton = (
+                    15,
+                    38,
+                    51
+                )
+
+                color_borde_boton = (
+                    64,
+                    166,
+                    190
+                )
+
+                color_texto_boton = CIAN_CLARO
+
+                texto_estado = (
+                    "ELEGIR"
+                )
+
 
             pygame.draw.rect(
                 pantalla,
-                color_fondo,
-                tarjeta,
-                border_radius=10
+                color_fondo_boton,
+                boton_estado,
+                border_radius=7
             )
+
 
             pygame.draw.rect(
                 pantalla,
-                color_borde,
-                tarjeta,
-                grosor_borde,
-                border_radius=10
+                color_borde_boton,
+                boton_estado,
+                1,
+                border_radius=7
             )
 
-            rect_imagen = imagenes[indice].get_rect(
-                center=(tarjeta.centerx, posicion_y + 58)
-            )
 
-            pantalla.blit(imagenes[indice], rect_imagen)
-
-            texto_nombre = fuente_nombre.render(
-                personaje["nombre"],
+            texto_boton = fuente_chip.render(
+                texto_estado,
                 True,
-                (255, 255, 255)
+                color_texto_boton
             )
 
-            rect_nombre = texto_nombre.get_rect(
-                center=(tarjeta.centerx, posicion_y + 125)
+
+            pantalla.blit(
+                texto_boton,
+                texto_boton.get_rect(
+                    center=boton_estado.center
+                )
             )
 
-            pantalla.blit(texto_nombre, rect_nombre)
 
-            texto_numero = fuente_numero.render(
-                f"Tecla {indice + 1}",
-                True,
-                (190, 190, 190)
+        # =================================================
+        # PANEL DE CONTROLES
+        # =================================================
+
+        controles = pygame.Rect(
+            188,
+            468,
+            424,
+            92
+        )
+
+
+        dibujar_panel(
+            pantalla,
+            controles,
+            borde=(
+                65,
+                92,
+                110
+            ),
+            relleno=(
+                8,
+                14,
+                24,
+                225
+            ),
+            grosor=1
+        )
+
+
+        # =================================================
+        # INSTRUCCIÓN
+        # =================================================
+
+        linea1 = fuente_instruccion.render(
+            "A / D o flechas para elegir",
+            True,
+            (
+                211,
+                219,
+                227
             )
-
-            rect_numero = texto_numero.get_rect(
-                center=(tarjeta.centerx, posicion_y + 152)
-            )
-
-            pantalla.blit(texto_numero, rect_numero)
-
-        nombre_elegido = PERSONAJES[indice_seleccionado]["nombre"]
-
-        texto_elegido = fuente_instrucciones.render(
-            f"Seleccionado: {nombre_elegido}",
-            True,
-            (255, 215, 0)
         )
 
-        rect_elegido = texto_elegido.get_rect(
-            center=(ANCHO_PANTALLA // 2, 550)
-        )
-
-        pantalla.blit(texto_elegido, rect_elegido)
-
-        texto_controles = fuente_instrucciones.render(
-            "Usa flechas o A/W/S/D para elegir",
-            True,
-            (230, 230, 230)
-        )
-
-        texto_confirmar = fuente_instrucciones.render(
-            "Presiona ENTER para comenzar",
-            True,
-            (0, 255, 255)
-        )
-
-        texto_salir = fuente_instrucciones.render(
-            "Presiona ESC para salir",
-            True,
-            (180, 180, 180)
-        )
 
         pantalla.blit(
-            texto_controles,
-            texto_controles.get_rect(
-                center=(ANCHO_PANTALLA // 2, 585)
+            linea1,
+            linea1.get_rect(
+                center=(
+                    ANCHO_PANTALLA // 2,
+                    493
+                )
             )
         )
+
+
+        # =================================================
+        # ENTER PARA CONFIRMAR
+        # =================================================
+
+        texto_enter = fuente_enter.render(
+            "ENTER",
+            True,
+            CIAN
+        )
+
+
+        texto_confirmar = fuente_instruccion.render(
+            "para confirmar",
+            True,
+            CIAN
+        )
+
+
+        ancho_total = (
+            texto_enter.get_width()
+            + 14
+            + texto_confirmar.get_width()
+        )
+
+
+        x_inicio = (
+            ANCHO_PANTALLA // 2
+            - ancho_total // 2
+        )
+
+
+        pantalla.blit(
+            texto_enter,
+            (
+                x_inicio,
+                525
+            )
+        )
+
 
         pantalla.blit(
             texto_confirmar,
-            texto_confirmar.get_rect(
-                center=(ANCHO_PANTALLA // 2, 615)
+            (
+                x_inicio
+                + texto_enter.get_width()
+                + 14,
+                527
             )
         )
+
+
+        # =================================================
+        # SELECCIONADO
+        # =================================================
+
+        texto_seleccion = fuente_seleccion.render(
+            (
+                "Seleccionado: "
+                + PERSONAJES[
+                    indice
+                ][
+                    "nombre"
+                ]
+            ),
+            True,
+            NARANJA
+        )
+
 
         pantalla.blit(
-            texto_salir,
-            texto_salir.get_rect(
-                center=(ANCHO_PANTALLA // 2, 645)
+            texto_seleccion,
+            texto_seleccion.get_rect(
+                center=(
+                    ANCHO_PANTALLA // 2,
+                    578
+                )
             )
         )
 
+
+        # =================================================
+        # ESQUINAS
+        # =================================================
+
+        dibujar_esquinas_hud(
+            pantalla
+        )
+
+
+        # =================================================
+        # ACTUALIZAR
+        # =================================================
+
         pygame.display.flip()
-        reloj.tick(60)
