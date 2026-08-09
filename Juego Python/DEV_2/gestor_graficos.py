@@ -45,7 +45,7 @@ NOMBRE_PERSONAJE_ACTUAL = "Principal"
 
 
 # =========================================================
-# RUTA PRINCIPAL
+# RUTA RAÍZ
 # =========================================================
 
 def ruta_raiz():
@@ -58,26 +58,18 @@ def ruta_raiz():
 
 
 # =========================================================
-# CREAR RESPLANDOR
+# CREAR GLOW
 # =========================================================
 
-def crear_glow(
-    tamano,
-    color
-):
+def crear_glow(tamano, color):
 
     superficie = pygame.Surface(
-        (
-            tamano,
-            tamano
-        ),
+        (tamano, tamano),
         pygame.SRCALPHA
     )
 
     centro = tamano // 2
-
     radio_max = tamano // 2
-
 
     for radio in range(
         radio_max,
@@ -95,7 +87,6 @@ def crear_glow(
             + 28 * factor
         )
 
-
         pygame.draw.circle(
             superficie,
             (
@@ -108,7 +99,6 @@ def crear_glow(
             ),
             radio
         )
-
 
     return superficie
 
@@ -126,8 +116,6 @@ def crear_tile_piso():
         )
     ).convert()
 
-
-    # Fondo oscuro
     tile.fill(
         (
             12,
@@ -136,8 +124,6 @@ def crear_tile_piso():
         )
     )
 
-
-    # Borde de la placa
     pygame.draw.rect(
         tile,
         (
@@ -154,8 +140,6 @@ def crear_tile_piso():
         1
     )
 
-
-    # Línea inferior
     pygame.draw.line(
         tile,
         (
@@ -174,8 +158,6 @@ def crear_tile_piso():
         1
     )
 
-
-    # Línea lateral
     pygame.draw.line(
         tile,
         (
@@ -194,16 +176,9 @@ def crear_tile_piso():
         1
     )
 
+    rng = random.Random(8)
 
-    # Detalles pequeños
-    rng = random.Random(
-        8
-    )
-
-
-    for _ in range(
-        9
-    ):
+    for _ in range(9):
 
         x = rng.randrange(
             5,
@@ -215,40 +190,20 @@ def crear_tile_piso():
             TAMANO_CELDA - 5
         )
 
-
         color = rng.choice(
             [
-                (
-                    30,
-                    48,
-                    66
-                ),
-
-                (
-                    25,
-                    35,
-                    53
-                ),
-
-                (
-                    27,
-                    57,
-                    70
-                )
+                (30, 48, 66),
+                (25, 35, 53),
+                (27, 57, 70)
             ]
         )
-
 
         pygame.draw.circle(
             tile,
             color,
-            (
-                x,
-                y
-            ),
+            (x, y),
             1
         )
-
 
     return tile
 
@@ -270,22 +225,30 @@ def inicializar_pantalla():
     global GLOW_CIAN
     global GLOW_META
 
-
     pygame.init()
 
+    # =====================================================
+    # PANTALLA COMPLETA
+    # =====================================================
+    #
+    # El juego sigue trabajando internamente en 800x600,
+    # pero Pygame lo escala a la resolución del monitor.
+    #
+    # Esto evita tener que cambiar todas las posiciones
+    # del menú, selector, HUD, etc.
+    # =====================================================
 
     pantalla = pygame.display.set_mode(
         (
             ANCHO_PANTALLA,
             ALTO_PANTALLA
-        )
+        ),
+        pygame.FULLSCREEN | pygame.SCALED
     )
-
 
     pygame.display.set_caption(
         "Laberinto Sobrenatural Pro"
     )
-
 
     # =====================================================
     # ELEMENTOS VISUALES
@@ -293,11 +256,9 @@ def inicializar_pantalla():
 
     TILE_PISO = crear_tile_piso()
 
-
     FONDO_JUEGO = crear_fondo_atmosferico(
         semilla=43
     )
-
 
     GLOW_FUEGO = crear_glow(
         110,
@@ -308,12 +269,10 @@ def inicializar_pantalla():
         )
     )
 
-
     GLOW_CIAN = crear_glow(
         100,
         CIAN
     )
-
 
     GLOW_META = crear_glow(
         120,
@@ -324,9 +283,7 @@ def inicializar_pantalla():
         )
     )
 
-
     raiz = ruta_raiz()
-
 
     # =====================================================
     # PRINCIPAL POR DEFECTO
@@ -339,34 +296,27 @@ def inicializar_pantalla():
         "chica_pro.png"
     )
 
-
     try:
 
-        HOJA_JUGADOR_PRO = (
-            cargar_personaje_rejilla(
-                ruta_principal,
-                4,
-                4,
-                [
-                    0,
-                    1,
-                    2,
-                    3
-                ]
-            )
+        HOJA_JUGADOR_PRO = cargar_personaje_rejilla(
+            ruta_principal,
+            4,
+            4,
+            [
+                0,
+                1,
+                2,
+                3
+            ]
         )
 
     except Exception as error:
 
         print(
-            f"No se pudo cargar Principal: "
-            f"{error}"
+            f"No se pudo cargar Principal: {error}"
         )
 
-        HOJA_JUGADOR_PRO = (
-            crear_sprite_emergencia()
-        )
-
+        HOJA_JUGADOR_PRO = crear_sprite_emergencia()
 
     # =====================================================
     # MURO
@@ -379,13 +329,11 @@ def inicializar_pantalla():
         "muro.jpg"
     )
 
-
     try:
 
         muro = pygame.image.load(
             ruta_muro
         ).convert()
-
 
         muro = pygame.transform.smoothscale(
             muro,
@@ -395,15 +343,12 @@ def inicializar_pantalla():
             )
         )
 
-
-        # Tinte azul/gris
         tinte = pygame.Surface(
             (
                 TAMANO_CELDA,
                 TAMANO_CELDA
             )
         ).convert()
-
 
         tinte.fill(
             (
@@ -413,29 +358,21 @@ def inicializar_pantalla():
             )
         )
 
-
         muro.blit(
             tinte,
-            (
-                0,
-                0
-            ),
+            (0, 0),
             special_flags=pygame.BLEND_MULT
         )
 
-
         IMAGEN_MURO = muro
-
 
     except Exception as error:
 
         print(
-            f"No se pudo cargar muro: "
-            f"{error}"
+            f"No se pudo cargar muro: {error}"
         )
 
         IMAGEN_MURO = None
-
 
     # =====================================================
     # FUEGO
@@ -448,7 +385,6 @@ def inicializar_pantalla():
         "fuego.jpg"
     )
 
-
     try:
 
         HOJA_FUEGO = cargar_sprite_sheet(
@@ -457,14 +393,11 @@ def inicializar_pantalla():
             4
         )
 
-
     except Exception as error:
 
         print(
-            f"No se pudo cargar fuego: "
-            f"{error}"
+            f"No se pudo cargar fuego: {error}"
         )
-
 
         cuadro = pygame.Surface(
             (
@@ -473,7 +406,6 @@ def inicializar_pantalla():
             ),
             pygame.SRCALPHA
         )
-
 
         pygame.draw.circle(
             cuadro,
@@ -485,16 +417,10 @@ def inicializar_pantalla():
             20
         )
 
-
         HOJA_FUEGO = [
-
             cuadro.copy()
-
-            for _ in range(
-                4
-            )
+            for _ in range(4)
         ]
-
 
     return pantalla
 
@@ -509,17 +435,11 @@ def detectar_filas_visuales(
     margen=6
 ):
 
-    ancho, alto = (
-        imagen.get_size()
-    )
-
+    ancho, alto = imagen.get_size()
 
     filas_visibles = []
 
-
-    for y in range(
-        alto
-    ):
+    for y in range(alto):
 
         franja = imagen.subsurface(
             (
@@ -530,34 +450,19 @@ def detectar_filas_visuales(
             )
         )
 
+        if franja.get_bounding_rect(
+            min_alpha=1
+        ).width > 0:
 
-        if (
-            franja.get_bounding_rect(
-                min_alpha=1
-            ).width > 0
-        ):
-
-            filas_visibles.append(
-                y
-            )
-
+            filas_visibles.append(y)
 
     if not filas_visibles:
-
         return []
-
 
     grupos = []
 
-
-    inicio = (
-        filas_visibles[0]
-    )
-
-    anterior = (
-        filas_visibles[0]
-    )
-
+    inicio = filas_visibles[0]
+    anterior = filas_visibles[0]
 
     for y in filas_visibles[1:]:
 
@@ -577,7 +482,6 @@ def detectar_filas_visuales(
             inicio = y
             anterior = y
 
-
     grupos.append(
         (
             inicio,
@@ -585,42 +489,34 @@ def detectar_filas_visuales(
         )
     )
 
-
     return [
-
         (
             max(
                 0,
                 ini - margen
             ),
-
             min(
                 alto,
                 fin + margen + 1
             )
         )
-
         for ini, fin in grupos
     ]
 
 
 # =========================================================
-# ADAPTAR PERSONAJE A CELDA
+# ADAPTAR PERSONAJE
 # =========================================================
 
-def adaptar_personaje_a_celda(
-    frame
-):
+def adaptar_personaje_a_celda(frame):
 
     tamano_canvas = (
         TAMANO_CELDA - 8
     )
 
-
     visible = frame.get_bounding_rect(
         min_alpha=1
     )
-
 
     if (
         visible.width == 0
@@ -635,22 +531,16 @@ def adaptar_personaje_a_celda(
             pygame.SRCALPHA
         )
 
-
     personaje = frame.subsurface(
         visible
     ).copy()
 
-
-    ancho, alto = (
-        personaje.get_size()
-    )
-
+    ancho, alto = personaje.get_size()
 
     escala = min(
         tamano_canvas / ancho,
         tamano_canvas / alto
     )
-
 
     nuevo_ancho = max(
         1,
@@ -659,14 +549,12 @@ def adaptar_personaje_a_celda(
         )
     )
 
-
     nuevo_alto = max(
         1,
         int(
             alto * escala
         )
     )
-
 
     personaje = pygame.transform.smoothscale(
         personaje,
@@ -676,7 +564,6 @@ def adaptar_personaje_a_celda(
         )
     )
 
-
     canvas = pygame.Surface(
         (
             tamano_canvas,
@@ -685,33 +572,26 @@ def adaptar_personaje_a_celda(
         pygame.SRCALPHA
     )
 
-
     x = (
         tamano_canvas
         - nuevo_ancho
     ) // 2
-
 
     y = (
         tamano_canvas
         - nuevo_alto
     )
 
-
     canvas.blit(
         personaje,
-        (
-            x,
-            y
-        )
+        (x, y)
     )
-
 
     return canvas
 
 
 # =========================================================
-# CARGAR SPRITE EN REJILLA
+# CARGAR PERSONAJE EN REJILLA
 # =========================================================
 
 def cargar_personaje_rejilla(
@@ -725,21 +605,17 @@ def cargar_personaje_rejilla(
         ruta_archivo
     ).convert_alpha()
 
-
     ancho_frame = (
         hoja.get_width()
         // columnas
     )
-
 
     alto_frame = (
         hoja.get_height()
         // filas
     )
 
-
     frames = []
-
 
     for fila in filas_usadas:
 
@@ -754,7 +630,6 @@ def cargar_personaje_rejilla(
                 alto_frame
             )
 
-
             frame = pygame.Surface(
                 (
                     ancho_frame,
@@ -763,16 +638,11 @@ def cargar_personaje_rejilla(
                 pygame.SRCALPHA
             )
 
-
             frame.blit(
                 hoja,
-                (
-                    0,
-                    0
-                ),
+                (0, 0),
                 rect
             )
-
 
             frames.append(
                 adaptar_personaje_a_celda(
@@ -780,12 +650,11 @@ def cargar_personaje_rejilla(
                 )
             )
 
-
     return frames
 
 
 # =========================================================
-# CARGAR SPRITE VISUAL
+# CARGAR PERSONAJE VISUAL
 # =========================================================
 
 def cargar_personaje_visual(
@@ -798,26 +667,20 @@ def cargar_personaje_visual(
         ruta_archivo
     ).convert_alpha()
 
-
     bandas = detectar_filas_visuales(
         hoja
     )
-
 
     ancho_columna = (
         hoja.get_width()
         // columnas
     )
 
-
     frames = []
-
 
     for fila in filas_usadas:
 
-        if fila >= len(
-            bandas
-        ):
+        if fila >= len(bandas):
 
             raise ValueError(
                 f"No existe la fila visual "
@@ -825,16 +688,11 @@ def cargar_personaje_visual(
                 f"{os.path.basename(ruta_archivo)}"
             )
 
-
-        y0, y1 = bandas[
-            fila
-        ]
-
+        y0, y1 = bandas[fila]
 
         alto_fila = (
             y1 - y0
         )
-
 
         for columna in range(
             columnas
@@ -847,7 +705,6 @@ def cargar_personaje_visual(
                 alto_fila
             )
 
-
             frame = pygame.Surface(
                 (
                     ancho_columna,
@@ -856,23 +713,17 @@ def cargar_personaje_visual(
                 pygame.SRCALPHA
             )
 
-
             frame.blit(
                 hoja,
-                (
-                    0,
-                    0
-                ),
+                (0, 0),
                 rect
             )
-
 
             frames.append(
                 adaptar_personaje_a_celda(
                     frame
                 )
             )
-
 
     return frames
 
@@ -888,7 +739,6 @@ def establecer_personaje(
     global HOJA_JUGADOR_PRO
     global NOMBRE_PERSONAJE_ACTUAL
 
-
     try:
 
         if (
@@ -899,65 +749,37 @@ def establecer_personaje(
         ):
 
             frames = cargar_personaje_visual(
-                personaje[
-                    "sprite"
-                ],
-
-                personaje[
-                    "columnas"
-                ],
-
-                personaje[
-                    "filas_usadas"
-                ]
+                personaje["sprite"],
+                personaje["columnas"],
+                personaje["filas_usadas"]
             )
-
 
         else:
 
             frames = cargar_personaje_rejilla(
-                personaje[
-                    "sprite"
-                ],
-
-                personaje[
-                    "filas"
-                ],
-
-                personaje[
-                    "columnas"
-                ],
-
-                personaje[
-                    "filas_usadas"
-                ]
+                personaje["sprite"],
+                personaje["filas"],
+                personaje["columnas"],
+                personaje["filas_usadas"]
             )
-
 
         if len(frames) != 16:
 
             raise ValueError(
                 f"Se esperaban 16 frames "
-                f"y se obtuvieron "
-                f"{len(frames)}"
+                f"y se obtuvieron {len(frames)}"
             )
-
 
         HOJA_JUGADOR_PRO = frames
 
-
         NOMBRE_PERSONAJE_ACTUAL = (
-            personaje[
-                "nombre"
-            ]
+            personaje["nombre"]
         )
-
 
         print(
             f"Personaje cargado: "
             f"{NOMBRE_PERSONAJE_ACTUAL}"
         )
-
 
     except Exception as error:
 
@@ -967,21 +789,17 @@ def establecer_personaje(
             f"{error}"
         )
 
-
         HOJA_JUGADOR_PRO = (
             crear_sprite_emergencia()
         )
 
-
         NOMBRE_PERSONAJE_ACTUAL = (
-            personaje[
-                "nombre"
-            ]
+            personaje["nombre"]
         )
 
 
 # =========================================================
-# SPRITE EMERGENCIA
+# SPRITE DE EMERGENCIA
 # =========================================================
 
 def crear_sprite_emergencia():
@@ -990,7 +808,6 @@ def crear_sprite_emergencia():
         TAMANO_CELDA - 8
     )
 
-
     cuadro = pygame.Surface(
         (
             tam,
@@ -998,7 +815,6 @@ def crear_sprite_emergencia():
         ),
         pygame.SRCALPHA
     )
-
 
     pygame.draw.circle(
         cuadro,
@@ -1010,19 +826,14 @@ def crear_sprite_emergencia():
         tam // 3
     )
 
-
     return [
-
         cuadro.copy()
-
-        for _ in range(
-            16
-        )
+        for _ in range(16)
     ]
 
 
 # =========================================================
-# CARGAR SPRITE SHEET NORMAL
+# CARGAR SPRITE SHEET
 # =========================================================
 
 def cargar_sprite_sheet(
@@ -1035,29 +846,21 @@ def cargar_sprite_sheet(
         ruta_archivo
     ).convert_alpha()
 
-
     ancho_frame = (
         hoja.get_width()
         // columnas
     )
-
 
     alto_frame = (
         hoja.get_height()
         // filas
     )
 
-
     frames = []
 
+    for fila in range(filas):
 
-    for fila in range(
-        filas
-    ):
-
-        for columna in range(
-            columnas
-        ):
+        for columna in range(columnas):
 
             rect = pygame.Rect(
                 columna * ancho_frame,
@@ -1065,7 +868,6 @@ def cargar_sprite_sheet(
                 ancho_frame,
                 alto_frame
             )
-
 
             frame = pygame.Surface(
                 (
@@ -1075,16 +877,11 @@ def cargar_sprite_sheet(
                 pygame.SRCALPHA
             )
 
-
             frame.blit(
                 hoja,
-                (
-                    0,
-                    0
-                ),
+                (0, 0),
                 rect
             )
-
 
             frame = pygame.transform.smoothscale(
                 frame,
@@ -1094,11 +891,7 @@ def cargar_sprite_sheet(
                 )
             )
 
-
-            frames.append(
-                frame
-            )
-
+            frames.append(frame)
 
     return frames
 
@@ -1112,15 +905,8 @@ def rango_visible(
     camara
 ):
 
-    filas = len(
-        matriz
-    )
-
-
-    columnas = len(
-        matriz[0]
-    )
-
+    filas = len(matriz)
+    columnas = len(matriz[0])
 
     col_inicio = max(
         0,
@@ -1131,7 +917,6 @@ def rango_visible(
             // TAMANO_CELDA
         ) - 2
     )
-
 
     col_fin = min(
         columnas,
@@ -1144,7 +929,6 @@ def rango_visible(
         ) + 3
     )
 
-
     fila_inicio = max(
         0,
         int(
@@ -1154,7 +938,6 @@ def rango_visible(
             // TAMANO_CELDA
         ) - 2
     )
-
 
     fila_fin = min(
         filas,
@@ -1166,7 +949,6 @@ def rango_visible(
             // TAMANO_CELDA
         ) + 3
     )
-
 
     return (
         fila_inicio,
@@ -1188,17 +970,14 @@ def dibujar_laberinto(
 ):
 
     # =====================================================
-    # FONDO ATMOSFÉRICO
+    # FONDO
     # =====================================================
 
     if FONDO_JUEGO:
 
         pantalla.blit(
             FONDO_JUEGO,
-            (
-                0,
-                0
-            )
+            (0, 0)
         )
 
     else:
@@ -1210,7 +989,6 @@ def dibujar_laberinto(
                 20
             )
         )
-
 
     # =====================================================
     # CAPA OSCURA
@@ -1224,7 +1002,6 @@ def dibujar_laberinto(
         pygame.SRCALPHA
     )
 
-
     capa.fill(
         (
             1,
@@ -1234,19 +1011,10 @@ def dibujar_laberinto(
         )
     )
 
-
     pantalla.blit(
         capa,
-        (
-            0,
-            0
-        )
+        (0, 0)
     )
-
-
-    # =====================================================
-    # CELDAS VISIBLES
-    # =====================================================
 
     (
         fila_inicio,
@@ -1258,11 +1026,7 @@ def dibujar_laberinto(
         camara
     )
 
-
-    tiempo = (
-        pygame.time.get_ticks()
-    )
-
+    tiempo = pygame.time.get_ticks()
 
     pulso = (
         0.5
@@ -1271,7 +1035,6 @@ def dibujar_laberinto(
             tiempo / 260.0
         )
     )
-
 
     for fila in range(
         fila_inicio,
@@ -1289,20 +1052,17 @@ def dibujar_laberinto(
                 columna
             ]
 
-
             x = (
                 columna
                 * TAMANO_CELDA
                 + camara.desplazamiento_x
             )
 
-
             y = (
                 fila
                 * TAMANO_CELDA
                 + camara.desplazamiento_y
             )
-
 
             rect = pygame.Rect(
                 x,
@@ -1311,9 +1071,8 @@ def dibujar_laberinto(
                 TAMANO_CELDA
             )
 
-
             # =================================================
-            # PARED
+            # MURO
             # =================================================
 
             if valor == 1:
@@ -1322,12 +1081,8 @@ def dibujar_laberinto(
 
                     pantalla.blit(
                         IMAGEN_MURO,
-                        (
-                            x,
-                            y
-                        )
+                        (x, y)
                     )
-
 
                     pygame.draw.rect(
                         pantalla,
@@ -1339,7 +1094,6 @@ def dibujar_laberinto(
                         rect,
                         1
                     )
-
 
                     pygame.draw.line(
                         pantalla,
@@ -1369,9 +1123,7 @@ def dibujar_laberinto(
                         rect
                     )
 
-
                 continue
-
 
             # =================================================
             # PISO
@@ -1381,10 +1133,7 @@ def dibujar_laberinto(
 
                 pantalla.blit(
                     TILE_PISO,
-                    (
-                        x,
-                        y
-                    )
+                    (x, y)
                 )
 
             else:
@@ -1398,7 +1147,6 @@ def dibujar_laberinto(
                     ),
                     rect
                 )
-
 
             # =================================================
             # INICIO
@@ -1418,7 +1166,6 @@ def dibujar_laberinto(
                     2
                 )
 
-
                 pygame.draw.circle(
                     pantalla,
                     CIAN,
@@ -1426,17 +1173,13 @@ def dibujar_laberinto(
                     4
                 )
 
-
             # =================================================
-            # META / PORTAL
+            # META
             # =================================================
 
             elif valor == 3:
 
-                glow = (
-                    GLOW_META.copy()
-                )
-
+                glow = GLOW_META.copy()
 
                 glow.set_alpha(
                     int(
@@ -1446,7 +1189,6 @@ def dibujar_laberinto(
                     )
                 )
 
-
                 pantalla.blit(
                     glow,
                     glow.get_rect(
@@ -1454,12 +1196,10 @@ def dibujar_laberinto(
                     )
                 )
 
-
                 portal = rect.inflate(
                     -18,
                     -18
                 )
-
 
                 pygame.draw.rect(
                     pantalla,
@@ -1471,7 +1211,6 @@ def dibujar_laberinto(
                     portal,
                     border_radius=9
                 )
-
 
                 pygame.draw.rect(
                     pantalla,
@@ -1485,7 +1224,6 @@ def dibujar_laberinto(
                     border_radius=9
                 )
 
-
                 pygame.draw.circle(
                     pantalla,
                     (
@@ -1498,7 +1236,6 @@ def dibujar_laberinto(
                     3
                 )
 
-
                 pygame.draw.circle(
                     pantalla,
                     (
@@ -1509,7 +1246,6 @@ def dibujar_laberinto(
                     portal.center,
                     4
                 )
-
 
             # =================================================
             # OBSTÁCULO
@@ -1522,7 +1258,6 @@ def dibujar_laberinto(
                     -12
                 )
 
-
                 pygame.draw.rect(
                     pantalla,
                     (
@@ -1533,7 +1268,6 @@ def dibujar_laberinto(
                     bloque,
                     border_radius=8
                 )
-
 
                 pygame.draw.rect(
                     pantalla,
@@ -1547,7 +1281,6 @@ def dibujar_laberinto(
                     border_radius=8
                 )
 
-
                 pygame.draw.line(
                     pantalla,
                     (
@@ -1560,7 +1293,6 @@ def dibujar_laberinto(
                     3
                 )
 
-
                 pygame.draw.line(
                     pantalla,
                     (
@@ -1572,7 +1304,6 @@ def dibujar_laberinto(
                     bloque.bottomleft,
                     3
                 )
-
 
             # =================================================
             # FUEGO
@@ -1589,7 +1320,6 @@ def dibujar_laberinto(
                         )
                     )
 
-
                 if HOJA_FUEGO:
 
                     pantalla.blit(
@@ -1599,12 +1329,8 @@ def dibujar_laberinto(
                                 HOJA_FUEGO
                             )
                         ],
-                        (
-                            x,
-                            y
-                        )
+                        (x, y)
                     )
-
 
             # =================================================
             # EXTINTOR
@@ -1621,14 +1347,12 @@ def dibujar_laberinto(
                         )
                     )
 
-
                 cuerpo = pygame.Rect(
                     x + 20,
                     y + 14,
                     24,
                     36
                 )
-
 
                 pygame.draw.rect(
                     pantalla,
@@ -1641,7 +1365,6 @@ def dibujar_laberinto(
                     border_radius=6
                 )
 
-
                 pygame.draw.rect(
                     pantalla,
                     CIAN_CLARO,
@@ -1650,8 +1373,6 @@ def dibujar_laberinto(
                     border_radius=6
                 )
 
-
-                # Signo +
                 pygame.draw.rect(
                     pantalla,
                     BLANCO,
@@ -1663,7 +1384,6 @@ def dibujar_laberinto(
                     ),
                     border_radius=2
                 )
-
 
                 pygame.draw.rect(
                     pantalla,
@@ -1679,7 +1399,7 @@ def dibujar_laberinto(
 
 
 # =========================================================
-# DIBUJAR PERSONAJE
+# DIBUJAR JUGADOR
 # =========================================================
 
 def dibujar_jugador_completo(
@@ -1698,25 +1418,21 @@ def dibujar_jugador_completo(
         + 4
     )
 
-
     mundo_y = (
         logica_y
         * TAMANO_CELDA
         + 4
     )
 
-
     x = (
         mundo_x
         + camara.desplazamiento_x
     )
 
-
     y = (
         mundo_y
         + camara.desplazamiento_y
     )
-
 
     # =====================================================
     # SOMBRA
@@ -1730,7 +1446,6 @@ def dibujar_jugador_completo(
         pygame.SRCALPHA
     )
 
-
     pygame.draw.ellipse(
         sombra,
         (
@@ -1742,7 +1457,6 @@ def dibujar_jugador_completo(
         sombra.get_rect()
     )
 
-
     pantalla.blit(
         sombra,
         (
@@ -1753,7 +1467,6 @@ def dibujar_jugador_completo(
         )
     )
 
-
     # =====================================================
     # FRAME
     # =====================================================
@@ -1763,7 +1476,6 @@ def dibujar_jugador_completo(
         % 4
     ) * 4
 
-
     indice = (
         indice_base
         + (
@@ -1772,13 +1484,9 @@ def dibujar_jugador_completo(
         )
     )
 
-
-    sprite = (
-        HOJA_JUGADOR_PRO[
-            indice
-        ]
-    )
-
+    sprite = HOJA_JUGADOR_PRO[
+        indice
+    ]
 
     if (
         flip_x
@@ -1791,18 +1499,14 @@ def dibujar_jugador_completo(
             False
         )
 
-
     pantalla.blit(
         sprite,
-        (
-            x,
-            y
-        )
+        (x, y)
     )
 
 
 # =========================================================
-# BARRA HUD
+# BARRA
 # =========================================================
 
 def dibujar_barra(
@@ -1824,9 +1528,7 @@ def dibujar_barra(
         border_radius=5
     )
 
-
     relleno = rect.copy()
-
 
     relleno.width = max(
         0,
@@ -1842,7 +1544,6 @@ def dibujar_barra(
         )
     )
 
-
     if relleno.width > 0:
 
         pygame.draw.rect(
@@ -1851,7 +1552,6 @@ def dibujar_barra(
             relleno,
             border_radius=5
         )
-
 
     pygame.draw.rect(
         pantalla,
@@ -1882,20 +1582,17 @@ def dibujar_hud(
         bold=True
     )
 
-
     fuente_valor = pygame.font.SysFont(
         "Bahnschrift",
         19,
         bold=True
     )
 
-
     fuente_pequena = pygame.font.SysFont(
         "Bahnschrift",
         12,
         bold=True
     )
-
 
     # =====================================================
     # VIDA
@@ -1907,7 +1604,6 @@ def dibujar_hud(
         230,
         68
     )
-
 
     dibujar_panel(
         pantalla,
@@ -1926,7 +1622,6 @@ def dibujar_hud(
         grosor=1
     )
 
-
     pantalla.blit(
         fuente_titulo.render(
             "VIDA",
@@ -1943,7 +1638,6 @@ def dibujar_hud(
         )
     )
 
-
     pantalla.blit(
         fuente_valor.render(
             f"{jugador.vida} HP",
@@ -1955,7 +1649,6 @@ def dibujar_hud(
             24
         )
     )
-
 
     dibujar_barra(
         pantalla,
@@ -1973,7 +1666,6 @@ def dibujar_hud(
         )
     )
 
-
     # =====================================================
     # EXTINTOR
     # =====================================================
@@ -1984,7 +1676,6 @@ def dibujar_hud(
         210,
         68
     )
-
 
     dibujar_panel(
         pantalla,
@@ -1999,7 +1690,6 @@ def dibujar_hud(
         grosor=1
     )
 
-
     pantalla.blit(
         fuente_titulo.render(
             "EXTINTOR",
@@ -2011,7 +1701,6 @@ def dibujar_hud(
             27
         )
     )
-
 
     pantalla.blit(
         fuente_valor.render(
@@ -2027,7 +1716,6 @@ def dibujar_hud(
             24
         )
     )
-
 
     dibujar_barra(
         pantalla,
@@ -2047,7 +1735,6 @@ def dibujar_hud(
         CIAN
     )
 
-
     # =====================================================
     # TIEMPO
     # =====================================================
@@ -2058,7 +1745,6 @@ def dibujar_hud(
         190,
         68
     )
-
 
     dibujar_panel(
         pantalla,
@@ -2077,7 +1763,6 @@ def dibujar_hud(
         grosor=1
     )
 
-
     pantalla.blit(
         fuente_titulo.render(
             "TIEMPO",
@@ -2094,18 +1779,15 @@ def dibujar_hud(
         )
     )
 
-
     segundos = (
         cronometro.obtener_segundos()
     )
-
 
     tiempo = fuente_valor.render(
         f"{segundos:03d}s",
         True,
         BLANCO
     )
-
 
     pantalla.blit(
         tiempo,
@@ -2117,9 +1799,8 @@ def dibujar_hud(
         )
     )
 
-
     # =====================================================
-    # NOMBRE DEL PERSONAJE
+    # PERSONAJE
     # =====================================================
 
     nombre_panel = pygame.Rect(
@@ -2128,7 +1809,6 @@ def dibujar_hud(
         176,
         30
     )
-
 
     pygame.draw.rect(
         pantalla,
@@ -2141,7 +1821,6 @@ def dibujar_hud(
         border_radius=8
     )
 
-
     pygame.draw.rect(
         pantalla,
         CIAN,
@@ -2150,13 +1829,11 @@ def dibujar_hud(
         border_radius=8
     )
 
-
     texto_nombre = fuente_pequena.render(
         NOMBRE_PERSONAJE_ACTUAL.upper(),
         True,
         CIAN_CLARO
     )
-
 
     pantalla.blit(
         texto_nombre,
@@ -2165,18 +1842,13 @@ def dibujar_hud(
         )
     )
 
-
-    # =====================================================
-    # ESQUINAS
-    # =====================================================
-
     dibujar_esquinas_hud(
         pantalla
     )
 
 
 # =========================================================
-# LOGOS EN PANTALLA FINAL
+# LOGOS PANTALLA FINAL
 # =========================================================
 
 def dibujar_logos_fin(
@@ -2199,7 +1871,6 @@ def dibujar_logos_fin(
             )
         )
 
-
         pantalla.blit(
             mini,
             (
@@ -2207,7 +1878,6 @@ def dibujar_logos_fin(
                 18
             )
         )
-
 
     if logo_espol:
 
@@ -2222,7 +1892,6 @@ def dibujar_logos_fin(
                 )
             )
         )
-
 
         pantalla.blit(
             mini,
@@ -2243,39 +1912,17 @@ def crear_confeti(
     cantidad=70
 ):
 
-    rng = random.Random(
-        99
-    )
-
+    rng = random.Random(99)
 
     colores = [
-
         NARANJA,
-
         CIAN,
-
-        (
-            255,
-            209,
-            60
-        ),
-
-        (
-            176,
-            89,
-            255
-        ),
-
-        (
-            255,
-            89,
-            146
-        )
+        (255, 209, 60),
+        (176, 89, 255),
+        (255, 89, 146)
     ]
 
-
     return [
-
         {
             "x": rng.uniform(
                 0,
@@ -2328,10 +1975,7 @@ def dibujar_confeti(
     dt
 ):
 
-    seg = (
-        dt / 1000.0
-    )
-
+    seg = dt / 1000.0
 
     for p in confeti:
 
@@ -2340,12 +1984,10 @@ def dibujar_confeti(
             * seg
         )
 
-
         p["y"] += (
             p["vy"]
             * seg
         )
-
 
         if (
             p["y"]
@@ -2359,16 +2001,11 @@ def dibujar_confeti(
                 ANCHO_PANTALLA
             )
 
-
         if p["rot"]:
 
             rect = pygame.Rect(
-                int(
-                    p["x"]
-                ),
-                int(
-                    p["y"]
-                ),
+                int(p["x"]),
+                int(p["y"]),
                 p["tam"],
                 max(
                     2,
@@ -2379,19 +2016,14 @@ def dibujar_confeti(
         else:
 
             rect = pygame.Rect(
-                int(
-                    p["x"]
-                ),
-                int(
-                    p["y"]
-                ),
+                int(p["x"]),
+                int(p["y"]),
                 max(
                     2,
                     p["tam"] // 3
                 ),
                 p["tam"]
             )
-
 
         pygame.draw.rect(
             pantalla,
@@ -2412,7 +2044,6 @@ def dibujar_icono_triste(
 
     x, y = centro
 
-
     nube = pygame.Surface(
         (
             120,
@@ -2421,8 +2052,6 @@ def dibujar_icono_triste(
         pygame.SRCALPHA
     )
 
-
-    # Nube
     pygame.draw.circle(
         nube,
         (
@@ -2437,7 +2066,6 @@ def dibujar_icono_triste(
         ),
         25
     )
-
 
     pygame.draw.circle(
         nube,
@@ -2454,7 +2082,6 @@ def dibujar_icono_triste(
         29
     )
 
-
     pygame.draw.circle(
         nube,
         (
@@ -2469,7 +2096,6 @@ def dibujar_icono_triste(
         ),
         23
     )
-
 
     pygame.draw.rect(
         nube,
@@ -2488,8 +2114,6 @@ def dibujar_icono_triste(
         border_radius=14
     )
 
-
-    # Ojos
     pygame.draw.circle(
         nube,
         (
@@ -2503,7 +2127,6 @@ def dibujar_icono_triste(
         ),
         3
     )
-
 
     pygame.draw.circle(
         nube,
@@ -2519,8 +2142,6 @@ def dibujar_icono_triste(
         3
     )
 
-
-    # Boca triste
     pygame.draw.arc(
         nube,
         (
@@ -2539,8 +2160,6 @@ def dibujar_icono_triste(
         2
     )
 
-
-    # Gotas
     pygame.draw.polygon(
         nube,
         (
@@ -2549,21 +2168,11 @@ def dibujar_icono_triste(
             205
         ),
         [
-            (
-                42,
-                68
-            ),
-            (
-                36,
-                80
-            ),
-            (
-                48,
-                80
-            )
+            (42, 68),
+            (36, 80),
+            (48, 80)
         ]
     )
-
 
     pygame.draw.polygon(
         nube,
@@ -2573,21 +2182,11 @@ def dibujar_icono_triste(
             205
         ),
         [
-            (
-                78,
-                68
-            ),
-            (
-                72,
-                82
-            ),
-            (
-                84,
-                82
-            )
+            (78, 68),
+            (72, 82),
+            (84, 82)
         ]
     )
-
 
     pantalla.blit(
         nube,
@@ -2611,26 +2210,19 @@ def mostrar_pantalla_fin(
 
     reloj = pygame.time.Clock()
 
-
     fondo = crear_fondo_atmosferico(
         semilla=61
     )
-
 
     logo_feria, logo_espol = (
         cargar_logos()
     )
 
-
     confeti = (
-
         crear_confeti()
-
         if ha_ganado
-
         else []
     )
-
 
     fuente_titulo = pygame.font.SysFont(
         "Bahnschrift",
@@ -2638,12 +2230,10 @@ def mostrar_pantalla_fin(
         bold=True
     )
 
-
     fuente_texto = pygame.font.SysFont(
         "Bahnschrift",
         20
     )
-
 
     fuente_boton = pygame.font.SysFont(
         "Bahnschrift",
@@ -2651,13 +2241,9 @@ def mostrar_pantalla_fin(
         bold=True
     )
 
-
     while True:
 
-        dt = reloj.tick(
-            60
-        )
-
+        dt = reloj.tick(60)
 
         # =================================================
         # EVENTOS
@@ -2671,7 +2257,6 @@ def mostrar_pantalla_fin(
 
                 return False
 
-
             if evento.type == pygame.KEYDOWN:
 
                 if evento.key == pygame.K_r:
@@ -2680,13 +2265,11 @@ def mostrar_pantalla_fin(
 
                     return True
 
-
                 if evento.key == pygame.K_ESCAPE:
 
                     pygame.event.clear()
 
                     return False
-
 
         # =================================================
         # FONDO
@@ -2694,12 +2277,8 @@ def mostrar_pantalla_fin(
 
         pantalla.blit(
             fondo,
-            (
-                0,
-                0
-            )
+            (0, 0)
         )
-
 
         oscuro = pygame.Surface(
             (
@@ -2708,7 +2287,6 @@ def mostrar_pantalla_fin(
             ),
             pygame.SRCALPHA
         )
-
 
         oscuro.fill(
             (
@@ -2719,15 +2297,10 @@ def mostrar_pantalla_fin(
             )
         )
 
-
         pantalla.blit(
             oscuro,
-            (
-                0,
-                0
-            )
+            (0, 0)
         )
-
 
         # =================================================
         # LOGOS
@@ -2739,17 +2312,13 @@ def mostrar_pantalla_fin(
             logo_espol
         )
 
-
         # =================================================
-        # PANEL CENTRAL
+        # PANEL
         # =================================================
 
         borde = (
-
             NARANJA
-
             if ha_ganado
-
             else (
                 89,
                 117,
@@ -2757,14 +2326,12 @@ def mostrar_pantalla_fin(
             )
         )
 
-
         panel = pygame.Rect(
             145,
             118,
             510,
             390
         )
-
 
         dibujar_panel(
             pantalla,
@@ -2780,7 +2347,6 @@ def mostrar_pantalla_fin(
             glow=ha_ganado
         )
 
-
         # =================================================
         # VICTORIA
         # =================================================
@@ -2793,7 +2359,6 @@ def mostrar_pantalla_fin(
                 dt
             )
 
-
             titulo = fuente_titulo.render(
                 "¡VICTORIA!",
                 True,
@@ -2804,30 +2369,17 @@ def mostrar_pantalla_fin(
                 )
             )
 
-
             subtitulo = fuente_texto.render(
-                (
-                    "Has demostrado tu "
-                    "ingenio y valentía."
-                ),
+                "Has demostrado tu ingenio y valentía.",
                 True,
                 BLANCO
             )
 
-
             mensaje = fuente_texto.render(
-                (
-                    "La salida estaba a un "
-                    "paso de tus decisiones."
-                ),
+                "La salida estaba a un paso de tus decisiones.",
                 True,
                 CIAN
             )
-
-
-            # =============================================
-            # MEDALLA / FRASCO
-            # =============================================
 
             pygame.draw.circle(
                 pantalla,
@@ -2843,7 +2395,6 @@ def mostrar_pantalla_fin(
                 42
             )
 
-
             pygame.draw.circle(
                 pantalla,
                 CIAN,
@@ -2855,7 +2406,6 @@ def mostrar_pantalla_fin(
                 2
             )
 
-
             pygame.draw.line(
                 pantalla,
                 CIAN_CLARO,
@@ -2870,7 +2420,6 @@ def mostrar_pantalla_fin(
                 4
             )
 
-
             pygame.draw.line(
                 pantalla,
                 CIAN_CLARO,
@@ -2884,7 +2433,6 @@ def mostrar_pantalla_fin(
                 ),
                 4
             )
-
 
             pygame.draw.line(
                 pantalla,
@@ -2900,7 +2448,6 @@ def mostrar_pantalla_fin(
                 4
             )
 
-
             pygame.draw.line(
                 pantalla,
                 CIAN_CLARO,
@@ -2915,7 +2462,6 @@ def mostrar_pantalla_fin(
                 4
             )
 
-
             pygame.draw.line(
                 pantalla,
                 CIAN_CLARO,
@@ -2929,7 +2475,6 @@ def mostrar_pantalla_fin(
                 ),
                 4
             )
-
 
             pygame.draw.circle(
                 pantalla,
@@ -2945,7 +2490,6 @@ def mostrar_pantalla_fin(
                 3
             )
 
-
             pygame.draw.circle(
                 pantalla,
                 NARANJA,
@@ -2955,7 +2499,6 @@ def mostrar_pantalla_fin(
                 ),
                 3
             )
-
 
         # =================================================
         # DERROTA
@@ -2973,22 +2516,14 @@ def mostrar_pantalla_fin(
                 )
             )
 
-
             subtitulo = fuente_texto.render(
-                (
-                    "El laberinto aún "
-                    "guarda sus secretos."
-                ),
+                "El laberinto aún guarda sus secretos.",
                 True,
                 BLANCO
             )
 
-
             mensaje = fuente_texto.render(
-                (
-                    "No te rindas. Intenta "
-                    "una ruta diferente."
-                ),
+                "No te rindas. Intenta una ruta diferente.",
                 True,
                 (
                     255,
@@ -2997,7 +2532,6 @@ def mostrar_pantalla_fin(
                 )
             )
 
-
             dibujar_icono_triste(
                 pantalla,
                 (
@@ -3005,7 +2539,6 @@ def mostrar_pantalla_fin(
                     278
                 )
             )
-
 
         # =================================================
         # TEXTOS
@@ -3021,7 +2554,6 @@ def mostrar_pantalla_fin(
             )
         )
 
-
         pantalla.blit(
             subtitulo,
             subtitulo.get_rect(
@@ -3032,7 +2564,6 @@ def mostrar_pantalla_fin(
             )
         )
 
-
         pantalla.blit(
             mensaje,
             mensaje.get_rect(
@@ -3042,7 +2573,6 @@ def mostrar_pantalla_fin(
                 )
             )
         )
-
 
         # =================================================
         # BOTONES
@@ -3055,14 +2585,12 @@ def mostrar_pantalla_fin(
             48
         )
 
-
         boton_esc = pygame.Rect(
             245,
             462,
             310,
             34
         )
-
 
         dibujar_panel(
             pantalla,
@@ -3078,7 +2606,6 @@ def mostrar_pantalla_fin(
             glow=ha_ganado
         )
 
-
         pygame.draw.rect(
             pantalla,
             (
@@ -3089,7 +2616,6 @@ def mostrar_pantalla_fin(
             boton_esc,
             border_radius=8
         )
-
 
         pygame.draw.rect(
             pantalla,
@@ -3103,25 +2629,15 @@ def mostrar_pantalla_fin(
             border_radius=8
         )
 
-
-        # =================================================
-        # TEXTO BOTONES
-        # =================================================
-
         texto_r = fuente_boton.render(
-
             (
                 "[ R ]  JUGAR DE NUEVO"
-
                 if ha_ganado
-
                 else "[ R ]  REINTENTAR"
             ),
-
             True,
             BLANCO
         )
-
 
         texto_esc = fuente_boton.render(
             "[ ESC ]  SALIR",
@@ -3133,14 +2649,12 @@ def mostrar_pantalla_fin(
             )
         )
 
-
         pantalla.blit(
             texto_r,
             texto_r.get_rect(
                 center=boton_r.center
             )
         )
-
 
         pantalla.blit(
             texto_esc,
@@ -3149,16 +2663,10 @@ def mostrar_pantalla_fin(
             )
         )
 
-
-        # =================================================
-        # ESQUINAS
-        # =================================================
-
         dibujar_esquinas_hud(
             pantalla,
             color=borde
         )
-
 
         pygame.display.flip()
 
