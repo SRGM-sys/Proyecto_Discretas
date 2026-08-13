@@ -12,7 +12,7 @@ from config import (
     ROJO_FUEGO,
 )
 
-from DEV_2.ui_estilo import (
+from src.graficos.ui_estilo import (
     NARANJA,
     NARANJA_CLARO,
     CIAN,
@@ -49,10 +49,9 @@ NOMBRE_PERSONAJE_ACTUAL = "Principal"
 # =========================================================
 
 def ruta_raiz():
-
     return os.path.dirname(
         os.path.dirname(
-            os.path.abspath(__file__)
+            os.path.dirname(os.path.abspath(__file__))
         )
     )
 
@@ -247,7 +246,7 @@ def inicializar_pantalla():
     )
 
     pygame.display.set_caption(
-        "Laberinto Sobrenatural Pro"
+        "Código de Escape"
     )
 
     # =====================================================

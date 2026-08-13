@@ -8,7 +8,7 @@ import os
 # Carpeta principal:
 # Juego Python/
 RUTA_RAIZ = os.path.dirname(
-    os.path.dirname(os.path.abspath(__file__))
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 )
 
 # assets/sprites/
@@ -31,23 +31,18 @@ CARPETA_PERSONAJES = os.path.join(
 
 PERSONAJES = [
     {
-        "nombre": "Minion",
+        "nombre": "Kanon",
 
         "sprite": os.path.join(
-            CARPETA_PERSONAJES,
-            "spriteMINION.png"
+            CARPETA_SPRITES,
+            "chica_pro.png"
         ),
 
-        # Su hoja tiene 4 filas y 4 columnas.
         "filas": 4,
         "columnas": 4,
 
-        # Filas que utiliza el juego:
-        # 0 = caminar lateral
-        # 1 = caminar de frente
-        # 2 = fuego
-        # 3 = agua
         "filas_usadas": [0, 1, 2, 3]
+
     },
 
     {
@@ -81,16 +76,22 @@ PERSONAJES = [
     },
 
     {
-        "nombre": "Principal",
+        "nombre": "Minion",
 
         "sprite": os.path.join(
-            CARPETA_SPRITES,
-            "chica_pro.png"
+            CARPETA_PERSONAJES,
+            "spriteMINION.png"
         ),
 
+        # Su hoja tiene 4 filas y 4 columnas.
         "filas": 4,
         "columnas": 4,
 
+        # Filas que utiliza el juego:
+        # 0 = caminar lateral
+        # 1 = caminar de frente
+        # 2 = fuego
+        # 3 = agua
         "filas_usadas": [0, 1, 2, 3]
     }
 ]

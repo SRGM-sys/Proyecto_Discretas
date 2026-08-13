@@ -7,7 +7,8 @@ def inicializar_audio():
     pygame.mixer.init()
     try:
         ruta_actual = os.path.dirname(os.path.abspath(__file__))
-        ruta_raiz = os.path.dirname(ruta_actual)
+        ruta_src = os.path.dirname(ruta_actual)
+        ruta_raiz = os.path.dirname(ruta_src)
         ruta_musica = os.path.join(ruta_raiz, 'assets', 'sonidos', 'Liella! - Vitamin SUMMER!  [Karaoke].mp3')
         
         pygame.mixer.music.load(ruta_musica)

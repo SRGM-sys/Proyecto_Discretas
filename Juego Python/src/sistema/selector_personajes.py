@@ -5,9 +5,9 @@ from config import (
     ALTO_PANTALLA
 )
 
-from DEV_2.personajes import PERSONAJES
+from src.sistema.personajes import PERSONAJES
 
-from DEV_2.ui_estilo import (
+from src.graficos.ui_estilo import (
     NARANJA,
     CIAN,
     CIAN_CLARO,

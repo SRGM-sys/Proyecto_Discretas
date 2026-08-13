@@ -1,6 +1,0 @@
-Responsabilidades: Pixeles, eventos y sprites en pantalla.
-
-    -Dibujar los cuadrados, colores y sprites en pantalla.
-    -Capturar los Inputs del teclado.
-    -Lógica y dibujado de la pantalla de inicio.
-

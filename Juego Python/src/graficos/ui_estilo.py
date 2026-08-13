@@ -28,21 +28,10 @@ GRIS = (158, 170, 185)
 # =========================================================
 
 def ruta_interfaz(nombre):
-
-    ruta_actual = os.path.dirname(
-        os.path.abspath(__file__)
-    )
-
-    ruta_raiz = os.path.dirname(
-        ruta_actual
-    )
-
-    return os.path.join(
-        ruta_raiz,
-        "assets",
-        "interfaz",
-        nombre
-    )
+    ruta_actual = os.path.dirname(os.path.abspath(__file__))
+    ruta_src = os.path.dirname(ruta_actual)
+    ruta_raiz = os.path.dirname(ruta_src)
+    return os.path.join(ruta_raiz, "assets", "interfaz", nombre)
 
 
 # =========================================================

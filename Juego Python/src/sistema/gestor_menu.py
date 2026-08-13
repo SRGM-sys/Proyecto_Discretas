@@ -2,7 +2,7 @@ import pygame
 
 from config import ANCHO_PANTALLA, ALTO_PANTALLA
 
-from DEV_2.ui_estilo import (
+from src.graficos.ui_estilo import (
     NARANJA,
     CIAN,
     BLANCO,
@@ -177,28 +177,24 @@ def mostrar_menu(pantalla):
         )
 
         # =================================================
-        # TÍTULO LABERINTO
+        # TÍTULO (CÓDIGO)
         # =================================================
-
         titulo_sombra = fuente_titulo.render(
-            "LABERINTO",
+            "CÓDIGO",
             True,
             (82, 32, 16)
         )
-
         titulo = fuente_titulo.render(
-            "LABERINTO",
+            "CÓDIGO",
             True,
             (238, 218, 190)
         )
-
         rect_titulo = titulo.get_rect(
             center=(
                 ANCHO_PANTALLA // 2,
                 175
             )
         )
-
         pantalla.blit(
             titulo_sombra,
             (
@@ -206,22 +202,19 @@ def mostrar_menu(pantalla):
                 rect_titulo.y + 5
             )
         )
-
         pantalla.blit(
             titulo,
             rect_titulo
         )
 
         # =================================================
-        # SOBRENATURAL
+        # SUBTÍTULO (DE ESCAPE)
         # =================================================
-
         subtitulo = fuente_subtitulo.render(
-            "SOBRENATURAL",
+            "DE ESCAPE",
             True,
             CIAN
         )
-
         pantalla.blit(
             subtitulo,
             subtitulo.get_rect(
