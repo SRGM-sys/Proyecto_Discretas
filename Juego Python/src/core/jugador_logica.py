@@ -6,8 +6,8 @@ class JugadorLogica:
         self.columna = col_inicial
         self.vida = 100
         
-        self.carga_extintor = 10 
-        self.carga_maxima = 10   
+        self.carga_extintor = 5 
+        self.carga_maxima = 5   
         
         self.esta_vivo = True
         self.ha_ganado = False
