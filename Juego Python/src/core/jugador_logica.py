@@ -91,3 +91,5 @@ class JugadorLogica:
         if self.vida <= 0:
             self.vida = 0
             self.esta_vivo = False
+
+            # Comentario UwU
